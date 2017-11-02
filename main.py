@@ -8,6 +8,7 @@ from ttk import Combobox
 import tkFileDialog
 import tkSimpleDialog
 
+DEFAULT_HEADROOM = 0.1
 PLAYLISTS_DIR = 'playlists'
 FILETYPES = {
     'WAV': {
@@ -30,6 +31,8 @@ BUTTON_PADDING_Y = 0
 PADDING_X = 0
 PADDING_Y = 0
 STICKY = 'NW'
+SELECTION_COLOR = 'blue'
+DEFAULT_COLOR = 'white'
 
 
 def create_custom_directory(func):
@@ -41,7 +44,7 @@ def create_custom_directory(func):
     return decorated_function
 
 
-def normalize(sdcard_root, filename, headroom=0.1):
+def normalize(sdcard_root, filename, headroom=DEFAULT_HEADROOM):
     sound = AudioSegment.from_file(
         os.path.join(sdcard_root, filename),
         'wav'
@@ -167,22 +170,21 @@ def list_files(sdcard_root, file_types):
 
 #### UI ####
 
-# TODO: maybe vars can live in the main Frame/controller or use
-# callbacks instead of textvariables to determine state
 
 class SDCardFrame(Frame):
-    # TODO: ask for root when opening so we're not in an unset state
     def __init__(self, master=None):
+        self.master = master
         self.sd_card_root = StringVar()
 
         Frame.__init__(self, master)
-        self.createWidgets()
+        self.create_widgets()
 
     def select_card(self):
         directory = tkFileDialog.askdirectory()
         self.sd_card_root.set(directory)
+        self.master.load_files()
 
-    def createWidgets(self):
+    def create_widgets(self):
         self.sd_card_label = Label(
             self,
             text='SD card root directory: '
@@ -205,12 +207,16 @@ class SDCardFrame(Frame):
 
 class FileModeSelectionFrame(Frame):
     def __init__(self, master=None):
+        self.master = master
         self.selected_mode_str = StringVar()
 
         Frame.__init__(self, master)
-        self.createWidgets()
+        self.create_widgets()
 
-    def createWidgets(self):
+    def update_selection(self, e):
+        self.master.load_files()
+
+    def create_widgets(self):
         self.mode_label = Label(
             self,
             text='Mode: '
@@ -220,55 +226,78 @@ class FileModeSelectionFrame(Frame):
         self.mode_combobox = Combobox(
             self,
             textvariable=self.selected_mode_str,
-            values=[val['name'] for i, val in FILETYPES.items()]
+            values=[i for i, val in FILETYPES.items()]
         )
-        self.selected_mode_str.set(FILETYPES['WAV']['name'])
+        self.selected_mode_str.set('WAV')
         self.mode_combobox.grid(row=0, column=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+        self.mode_combobox.bind('<<ComboboxSelected>>', self.update_selection)
 
 
 class FoundFilesFrame(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.label_template = 'Found files ({}):'.format('TODO')
+        self.label_template = 'Found files {}:'
         self.label_str = StringVar()
         self.label_str.set(self.label_template)
-        self.createWidgets()
+        self.checked_items = set()
+        self.create_widgets()
 
-    def set_files(self, lines):
+    def set_files(self, lines, filetypes):
         self.files_list.delete(0, END)
         for line in lines:
             self.files_list.insert(END, line)
+        self.label_str.set(self.label_template.format(filetypes))
 
     def set_list_height(self, height):
         self.file_list_frame.config(height=height)
 
     def select_all(self):
-        pass
+        self.files_list.select_set(0, END)
+
+    def select_none(self):
+        self.files_list.selection_clear(0, END)
 
     def check_selected(self):
-        pass
+        idxs = self.files_list.curselection()
+
+        for i in idxs:
+            self.checked_items.add(self.files_list.get(i))
+            self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
 
     def uncheck_selected(self):
-        pass
+        idxs = self.files_list.curselection()
+
+        for i in idxs:
+            item = self.files_list.get(i)
+
+            if item in self.checked_items:
+                self.checked_items.remove(item)
+
+            self.files_list.itemconfig(
+                i,
+                {'bg': DEFAULT_COLOR}
+            )
 
     def normalize_selected(self):
+        # TODO
         pass
 
     def make16bit_selected(self):
+        # TODO
         pass
 
     def make441khz_selected(self):
+        # TODO
         pass
 
-    def createWidgets(self):
+    def create_widgets(self):
+        # TODO: scrollbars
         self.label = Label(
             self,
             textvariable=self.label_str
         )
         self.label.grid(row=0, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
-        # TODO: rebuild as a white backgrounded scrollable frame with a checkbox per item
-        # and a label for the filename, which can be clicked for selection
         self.file_list_frame = Frame(self, width=400)
         self.file_list_frame.pack_propagate(0)
 
@@ -292,13 +321,13 @@ class FoundFilesFrame(Frame):
             sticky=STICKY
         )
 
-        self.check_selected_button = Button(
+        self.select_none_button = Button(
             self.buttons_frame,
-            text='Check selected',
+            text='Select none',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
-            command=self.check_selected
+            command=self.select_none
         )
-        self.check_selected_button.grid(
+        self.select_none_button.grid(
             row=0,
             column=1,
             padx=BUTTON_PADDING_X,
@@ -306,15 +335,29 @@ class FoundFilesFrame(Frame):
             sticky=STICKY
         )
 
+        self.check_selected_button = Button(
+            self.buttons_frame,
+            text='Mark selected',
+            wraplength=BUTTON_MAX_TEXT_LENGTH,
+            command=self.check_selected
+        )
+        self.check_selected_button.grid(
+            row=0,
+            column=2,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
         self.uncheck_selected_button = Button(
             self.buttons_frame,
-            text='Uncheck selected',
+            text='Unmark selected',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
             command=self.uncheck_selected
         )
         self.uncheck_selected_button.grid(
             row=0,
-            column=2,
+            column=3,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
@@ -399,7 +442,7 @@ class OptionsFrame(Frame):
         self.label_str = StringVar()
 
         Frame.__init__(self, master)
-        self.createWidgets()
+        self.create_widgets()
 
     def set_label_str(self, input_str):
         self.label_str.set(input_str)
@@ -424,7 +467,7 @@ class OptionsFrame(Frame):
     def remove_option(self):
         self.options_list.delete(self.options_list.curselection())
 
-    def createWidgets(self):
+    def create_widgets(self):
         self.label = Label(
             self,
             textvariable=self.label_str
@@ -493,21 +536,22 @@ class OptionsFrame(Frame):
 
         self.buttons_frame.grid(row=2, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
-        # for i in xrange(100):
-        #     line = ''
-        #     for j in xrange(200):
-        #         line += str(j + i)
-        #     self.options_list.insert(END, line)
-
 
 class Application(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
         self.master = master
         self.pack(fill=BOTH, expand=YES)
-        self.createWidgets()
+        self.create_widgets()
 
-    def createWidgets(self):
+    def load_files(self):
+        filetypes = FILETYPES[self.mode_frame.selected_mode_str.get()]['extensions']
+        self.found_files_frame.set_files(
+            list_files(self.sd_card_frame.sd_card_root.get(), filetypes),
+            filetypes
+        )
+
+    def create_widgets(self):
         self.sd_card_frame = SDCardFrame(self)
         self.sd_card_frame.grid(row=0, column=0, padx=PADDING_X, pady=PADDING_Y, columnspan=2, sticky=STICKY)
 
@@ -532,7 +576,8 @@ class Application(Frame):
             self.found_files_frame.file_list_frame.winfo_rooty() +
             56 # don't know why
         )
-        self.found_files_frame.set_files(['yo', 'salut', 'boo'])
+
+        self.sd_card_frame.select_card()
 
 
 root = Tk()
@@ -540,6 +585,10 @@ app = Application(master=root)
 app.mainloop()
 root.destroy()
 
+# TODO:
+# options
+# save/load playlists (we don't have a playlist frame yet)
+# implement normalize/16bit/44.1khz buttons
 
 # TODO: do the same for midi files, wavetables and their playlists
 # Loading wavetables
