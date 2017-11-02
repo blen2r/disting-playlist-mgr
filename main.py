@@ -31,7 +31,7 @@ BUTTON_PADDING_Y = 0
 PADDING_X = 0
 PADDING_Y = 0
 STICKY = 'NW'
-SELECTION_COLOR = 'blue'
+SELECTION_COLOR = 'yellow'
 DEFAULT_COLOR = 'white'
 
 
@@ -239,23 +239,44 @@ class FoundFilesFrame(Frame):
         self.label_template = 'Found files {}:'
         self.label_str = StringVar()
         self.label_str.set(self.label_template)
+        self.number_selected_template = 'Selected: {}'
+        self.number_selected = StringVar()
+        self.number_selected.set(self.number_selected_template.format(0))
+        self.number_marked_template = 'Marked for playlist: {}'
+        self.number_marked = StringVar()
+        self.number_marked.set(self.number_marked_template.format(0))
         self.checked_items = set()
         self.create_widgets()
 
     def set_files(self, lines, filetypes):
+        self.checked_items = set()
         self.files_list.delete(0, END)
         for line in lines:
             self.files_list.insert(END, line)
         self.label_str.set(self.label_template.format(filetypes))
+        self.update_counts()
 
     def set_list_height(self, height):
         self.file_list_frame.config(height=height)
 
     def select_all(self):
         self.files_list.select_set(0, END)
+        self.update_counts()
 
     def select_none(self):
         self.files_list.selection_clear(0, END)
+        self.update_counts()
+
+    def update_counts(self, e=None):
+        self.number_marked.set(
+            self.number_marked_template.format(len(self.checked_items))
+        )
+
+        self.number_selected.set(
+            self.number_selected_template.format(
+                len(self.files_list.curselection())
+            )
+        )
 
     def check_selected(self):
         idxs = self.files_list.curselection()
@@ -263,6 +284,8 @@ class FoundFilesFrame(Frame):
         for i in idxs:
             self.checked_items.add(self.files_list.get(i))
             self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
+
+        self.update_counts()
 
     def uncheck_selected(self):
         idxs = self.files_list.curselection()
@@ -278,6 +301,8 @@ class FoundFilesFrame(Frame):
                 {'bg': DEFAULT_COLOR}
             )
 
+        self.update_counts()
+
     def normalize_selected(self):
         # TODO
         pass
@@ -291,7 +316,6 @@ class FoundFilesFrame(Frame):
         pass
 
     def create_widgets(self):
-        # TODO: scrollbars
         self.label = Label(
             self,
             textvariable=self.label_str
@@ -301,11 +325,49 @@ class FoundFilesFrame(Frame):
         self.file_list_frame = Frame(self, width=400)
         self.file_list_frame.pack_propagate(0)
 
-        self.files_list = Listbox(self.file_list_frame, selectmode=EXTENDED)
+        self.vertical_scrollbar = Scrollbar(self.file_list_frame, orient=VERTICAL)
+        self.vertical_scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.horizontal_scrollbar = Scrollbar(self.file_list_frame, orient=HORIZONTAL)
+        self.horizontal_scrollbar.pack(side=BOTTOM, fill=X)
+
+        self.files_list = Listbox(
+            self.file_list_frame,
+            selectmode=EXTENDED,
+            xscrollcommand=self.horizontal_scrollbar.set,
+            yscrollcommand=self.vertical_scrollbar.set
+        )
+        self.horizontal_scrollbar.config(command=self.files_list.xview)
+        self.vertical_scrollbar.config(command=self.files_list.yview)
+        self.files_list.bind('<<ListboxSelect>>', self.update_counts)
         self.files_list.pack(fill=BOTH, expand=1)
         self.file_list_frame.grid(row=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
         self.buttons_frame = Frame(self)
+
+        self.selected_label = Label(
+            self.buttons_frame,
+            textvariable=self.number_selected
+        )
+        self.selected_label.grid(
+            row=0,
+            column=0,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.marked_label = Label(
+            self.buttons_frame,
+            textvariable=self.number_marked
+        )
+        self.marked_label.grid(
+            row=0,
+            column=1,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
 
         self.select_all_button = Button(
             self.buttons_frame,
@@ -314,7 +376,7 @@ class FoundFilesFrame(Frame):
             command=self.select_all
         )
         self.select_all_button.grid(
-            row=0,
+            row=1,
             column=0,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -328,7 +390,7 @@ class FoundFilesFrame(Frame):
             command=self.select_none
         )
         self.select_none_button.grid(
-            row=0,
+            row=1,
             column=1,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -342,7 +404,7 @@ class FoundFilesFrame(Frame):
             command=self.check_selected
         )
         self.check_selected_button.grid(
-            row=0,
+            row=1,
             column=2,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -356,7 +418,7 @@ class FoundFilesFrame(Frame):
             command=self.uncheck_selected
         )
         self.uncheck_selected_button.grid(
-            row=0,
+            row=1,
             column=3,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -370,7 +432,7 @@ class FoundFilesFrame(Frame):
             command=self.normalize_selected
         )
         self.normalize_selected_button.grid(
-            row=1,
+            row=2,
             column=0,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -384,7 +446,7 @@ class FoundFilesFrame(Frame):
             command=self.make16bit_selected
         )
         self.make16bit_selected_button.grid(
-            row=1,
+            row=2,
             column=1,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -398,7 +460,7 @@ class FoundFilesFrame(Frame):
             command=self.make441khz_selected
         )
         self.make441khz_selected_button.grid(
-            row=1,
+            row=2,
             column=2,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -586,9 +648,16 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# options
 # save/load playlists (we don't have a playlist frame yet)
 # implement normalize/16bit/44.1khz buttons
+# deal with deleted files when loading a playlist (maybe a select/ clear deleted files button)
+# add button to select files from playlist
+# Ask for backup when normalizing, 16bit and 44.1
+# Ask for confirmation if loading and current work is not saved
+# Make active asks if you want to save if current work is not saved. Also asks if you want to backup current playlist
+# Ask for confirmation for check/unchk all
+# Ask for confirmation if changing mode and current work is not saved
+
 
 # TODO: do the same for midi files, wavetables and their playlists
 # Loading wavetables
