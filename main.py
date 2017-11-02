@@ -1,12 +1,15 @@
 import os
 # import time
 from functools import wraps
+from shutil import copyfile
 from pydub import effects, AudioSegment
 from Tkinter import Tk, Frame, Button, Label, Entry, StringVar, Listbox, END, \
-    EXTENDED, BOTH, YES, Scrollbar, RIGHT, BOTTOM, X, Y, HORIZONTAL, VERTICAL
+    EXTENDED, BOTH, YES, Scrollbar, RIGHT, BOTTOM, X, Y, HORIZONTAL, \
+    VERTICAL, LEFT, NORMAL, DISABLED
 from ttk import Combobox
 import tkFileDialog
 import tkSimpleDialog
+import tkMessageBox
 
 DEFAULT_HEADROOM = 0.1
 PLAYLISTS_DIR = 'playlists'
@@ -44,22 +47,32 @@ def create_custom_directory(func):
     return decorated_function
 
 
-def normalize(sdcard_root, filename, headroom=DEFAULT_HEADROOM):
+def normalize(sdcard_root, filename, backup, headroom=DEFAULT_HEADROOM):
+    full_path = os.path.join(sdcard_root, filename)
+
+    if backup:
+        copyfile(full_path, full_path + '_bak')
+
     sound = AudioSegment.from_file(
-        os.path.join(sdcard_root, filename),
+        full_path,
         'wav'
     )
     sound = effects.normalize(sound, headroom)
-    sound.export(os.path.join(sdcard_root, filename), format='wav')
+    sound.export(full_path, format='wav')
 
 
-def make_16bit_44100hz(sdcard_root, filename):
+def make_16bit(sdcard_root, filename, backup):
+    full_path = os.path.join(sdcard_root, filename)
+
+    if backup:
+        copyfile(full_path, full_path + '_bak')
+
     sound = AudioSegment.from_file(
-        os.path.join(sdcard_root, filename),
+        full_path,
         'wav'
     )
     sound.export(
-        os.path.join(sdcard_root, filename),
+        full_path,
         format='wav',
         parameters=[
             '-acodec',
@@ -67,7 +80,7 @@ def make_16bit_44100hz(sdcard_root, filename):
             '-ac',
             str(sound.channels),
             '-ar',
-            '44100'
+            str(sound.frame_rate)
         ]
     )
 
@@ -165,11 +178,12 @@ def fetch_playlists(sdcard_root, playlist_type):
 
 
 def list_files(sdcard_root, file_types):
-    return [f for f in os.listdir(sdcard_root) if f.endswith(file_types)]
+    lst = [f for f in os.listdir(sdcard_root) if f.endswith(file_types)]
+    lst.sort()
+    return lst
 
 
 #### UI ####
-
 
 class SDCardFrame(Frame):
     def __init__(self, master=None):
@@ -235,6 +249,7 @@ class FileModeSelectionFrame(Frame):
 
 class FoundFilesFrame(Frame):
     def __init__(self, master=None):
+        self.master = master
         Frame.__init__(self, master)
         self.label_template = 'Found files {}:'
         self.label_str = StringVar()
@@ -304,16 +319,68 @@ class FoundFilesFrame(Frame):
         self.update_counts()
 
     def normalize_selected(self):
-        # TODO
-        pass
+        backup = tkMessageBox.askyesno(
+            'Backup',
+            'Do you want to create backups?'
+        )
 
-    def make16bit_selected(self):
-        # TODO
-        pass
+        idxs = self.files_list.curselection()
 
-    def make441khz_selected(self):
-        # TODO
-        pass
+        for i in idxs:
+            item = self.files_list.get(i)
+            try:
+                normalize(
+                    self.master.sd_card_frame.sd_card_root.get(),
+                    item,
+                    backup
+                )
+            except Exception, e:
+                print e
+                tkMessageBox.showwarning(
+                    'Error',
+                    'Error while processing file {} . See console.'.format(item)
+                )
+
+        tkMessageBox.showinfo(
+            'Done',
+            'Done!'
+        )
+
+    def make_16bit_selected(self):
+        backup = tkMessageBox.askyesno(
+            'Backup',
+            'Do you want to create backups?'
+        )
+
+        idxs = self.files_list.curselection()
+
+        for i in idxs:
+            item = self.files_list.get(i)
+            try:
+                make_16bit(
+                    self.master.sd_card_frame.sd_card_root.get(),
+                    item,
+                    backup
+                )
+            except Exception, e:
+                print e
+                tkMessageBox.showwarning(
+                    'Error',
+                    'Error while processing file {} . See console.'.format(item)
+                )
+
+        tkMessageBox.showinfo(
+            'Done',
+            'Done!'
+        )
+
+    def set_midi_mode(self, midi_mode):
+        if midi_mode:
+            self.normalize_selected_button.config(state=DISABLED)
+            self.make16bit_selected_button.config(state=DISABLED)
+        else:
+            self.normalize_selected_button.config(state=NORMAL)
+            self.make16bit_selected_button.config(state=NORMAL)
 
     def create_widgets(self):
         self.label = Label(
@@ -345,29 +412,19 @@ class FoundFilesFrame(Frame):
 
         self.buttons_frame = Frame(self)
 
+        self.labels_frame = Frame(self.buttons_frame)
         self.selected_label = Label(
-            self.buttons_frame,
+            self.labels_frame,
             textvariable=self.number_selected
         )
-        self.selected_label.grid(
-            row=0,
-            column=0,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
-        )
+        self.selected_label.pack(side=LEFT)
 
         self.marked_label = Label(
-            self.buttons_frame,
+            self.labels_frame,
             textvariable=self.number_marked
         )
-        self.marked_label.grid(
-            row=0,
-            column=1,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
-        )
+        self.marked_label.pack(padx=100, side=LEFT)
+        self.labels_frame.grid(row=0, columnspan=3)
 
         self.select_all_button = Button(
             self.buttons_frame,
@@ -443,25 +500,11 @@ class FoundFilesFrame(Frame):
             self.buttons_frame,
             text='Make selected 16 bit',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
-            command=self.make16bit_selected
+            command=self.make_16bit_selected
         )
         self.make16bit_selected_button.grid(
             row=2,
             column=1,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
-        )
-
-        self.make441khz_selected_button = Button(
-            self.buttons_frame,
-            text='Make selected 44100Hz',
-            wraplength=BUTTON_MAX_TEXT_LENGTH,
-            command=self.make441khz_selected
-        )
-        self.make441khz_selected_button.grid(
-            row=2,
-            column=2,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
@@ -607,7 +650,10 @@ class Application(Frame):
         self.create_widgets()
 
     def load_files(self):
-        filetypes = FILETYPES[self.mode_frame.selected_mode_str.get()]['extensions']
+        new_mode = self.mode_frame.selected_mode_str.get()
+        filetypes = FILETYPES[new_mode]['extensions']
+
+        self.found_files_frame.set_midi_mode(new_mode == 'MIDI')
         self.found_files_frame.set_files(
             list_files(self.sd_card_frame.sd_card_root.get(), filetypes),
             filetypes
@@ -648,11 +694,11 @@ app.mainloop()
 root.destroy()
 
 # TODO:
+# Ask for headroom when normalizing
 # save/load playlists (we don't have a playlist frame yet)
-# implement normalize/16bit/44.1khz buttons
 # deal with deleted files when loading a playlist (maybe a select/ clear deleted files button)
 # add button to select files from playlist
-# Ask for backup when normalizing, 16bit and 44.1
+
 # Ask for confirmation if loading and current work is not saved
 # Make active asks if you want to save if current work is not saved. Also asks if you want to backup current playlist
 # Ask for confirmation for check/unchk all
