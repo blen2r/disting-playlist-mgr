@@ -247,6 +247,20 @@ class FileModeSelectionFrame(Frame):
         self.mode_combobox.bind('<<ComboboxSelected>>', self.update_selection)
 
 
+class NormalizationHeadroomDialog(tkSimpleDialog.Dialog):
+    def body(self, master):
+        Label(master, text="Headroom:").grid(row=0)
+
+        self.e1 = Entry(master)
+        self.e1.insert(0, str(DEFAULT_HEADROOM))
+
+        self.e1.grid(row=0, column=1)
+        return self.e1
+
+    def apply(self):
+        self.result = self.e1.get()
+
+
 class FoundFilesFrame(Frame):
     def __init__(self, master=None):
         self.master = master
@@ -324,6 +338,16 @@ class FoundFilesFrame(Frame):
             'Do you want to create backups?'
         )
 
+        d = NormalizationHeadroomDialog(self.master)
+        try:
+            headroom = float(d.result)
+        except:
+            tkMessageBox.showerror(
+                'Error',
+                'Error! Make sure the headroom is an integer or decimal value'
+            )
+            return
+
         idxs = self.files_list.curselection()
 
         for i in idxs:
@@ -332,7 +356,8 @@ class FoundFilesFrame(Frame):
                 normalize(
                     self.master.sd_card_frame.sd_card_root.get(),
                     item,
-                    backup
+                    backup,
+                    headroom
                 )
             except Exception, e:
                 print e
