@@ -43,7 +43,16 @@ def create_custom_directory(func):
     def decorated_function(sdcard_root, *args, **kwargs):
         if not os.path.isdir(os.path.join(sdcard_root, PLAYLISTS_DIR)):
             os.mkdir(os.path.join(sdcard_root, PLAYLISTS_DIR))
-        return func(*args, **kwargs)
+
+        for k, v in FILETYPES.items():
+            if not os.path.isdir(
+                os.path.join(sdcard_root, PLAYLISTS_DIR, v['name'].lower())
+            ):
+                os.mkdir(
+                    os.path.join(sdcard_root, PLAYLISTS_DIR, v['name'].lower())
+                )
+
+        return func(sdcard_root, *args, **kwargs)
     return decorated_function
 
 
@@ -154,6 +163,7 @@ def write_playlist(
         elements,
         in_playlist_dir=True
 ):
+    playlist_type = playlist_type.lower()
     lines = elements_to_dist_format(elements)
 
     if in_playlist_dir:
@@ -171,7 +181,8 @@ def write_playlist(
 
 
 @create_custom_directory
-def fetch_playlists(sdcard_root, playlist_type):
+def list_playlists(sdcard_root, playlist_type):
+    playlist_type = playlist_type.lower()
     return [f for f in os.listdir(
         os.path.join(sdcard_root, PLAYLISTS_DIR, playlist_type)
     ) if f.endswith('.txt')]
@@ -186,7 +197,7 @@ def list_files(sdcard_root, file_types):
 #### UI ####
 
 class SDCardFrame(Frame):
-    def __init__(self, master=None):
+    def __init__(self, master):
         self.master = master
         self.sd_card_root = StringVar()
 
@@ -220,7 +231,7 @@ class SDCardFrame(Frame):
 
 
 class FileModeSelectionFrame(Frame):
-    def __init__(self, master=None):
+    def __init__(self, master):
         self.master = master
         self.selected_mode_str = StringVar()
 
@@ -262,7 +273,7 @@ class NormalizationHeadroomDialog(tkSimpleDialog.Dialog):
 
 
 class FoundFilesFrame(Frame):
-    def __init__(self, master=None):
+    def __init__(self, master):
         self.master = master
         Frame.__init__(self, master)
         self.label_template = 'Found files {}:'
@@ -274,16 +285,20 @@ class FoundFilesFrame(Frame):
         self.number_marked_template = 'Marked for playlist: {}'
         self.number_marked = StringVar()
         self.number_marked.set(self.number_marked_template.format(0))
-        self.checked_items = set()
         self.create_widgets()
 
-    def set_files(self, lines, filetypes):
-        self.checked_items = set()
+    def clear(self):
         self.files_list.delete(0, END)
+
+    def set_files(self, lines, filetypes):
+        self.clear()
         for line in lines:
             self.files_list.insert(END, line)
         self.label_str.set(self.label_template.format(filetypes))
         self.update_counts()
+
+    def get_selected_files(self):
+        return [self.files_list.get(i) for i in self.files_list.curselection()]
 
     def set_list_height(self, height):
         self.file_list_frame.config(height=height)
@@ -298,7 +313,7 @@ class FoundFilesFrame(Frame):
 
     def update_counts(self, e=None):
         self.number_marked.set(
-            self.number_marked_template.format(len(self.checked_items))
+            self.number_marked_template.format(len(self.master.checked_items))
         )
 
         self.number_selected.set(
@@ -311,7 +326,7 @@ class FoundFilesFrame(Frame):
         idxs = self.files_list.curselection()
 
         for i in idxs:
-            self.checked_items.add(self.files_list.get(i))
+            self.master.checked_items.add(self.files_list.get(i))
             self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
 
         self.update_counts()
@@ -322,8 +337,8 @@ class FoundFilesFrame(Frame):
         for i in idxs:
             item = self.files_list.get(i)
 
-            if item in self.checked_items:
-                self.checked_items.remove(item)
+            if item in self.master.checked_items:
+                self.master.checked_items.remove(item)
 
             self.files_list.itemconfig(
                 i,
@@ -427,7 +442,8 @@ class FoundFilesFrame(Frame):
             self.file_list_frame,
             selectmode=EXTENDED,
             xscrollcommand=self.horizontal_scrollbar.set,
-            yscrollcommand=self.vertical_scrollbar.set
+            yscrollcommand=self.vertical_scrollbar.set,
+            exportselection=0
         )
         self.horizontal_scrollbar.config(command=self.files_list.xview)
         self.vertical_scrollbar.config(command=self.files_list.yview)
@@ -568,18 +584,20 @@ class OptionsDialog(tkSimpleDialog.Dialog):
 
 
 class OptionsFrame(Frame):
-    def __init__(self, master=None):
-        self.label_str = StringVar()
+    def __init__(self, master, global_option):
+        self.global_option = global_option
+        self.master = master
 
         Frame.__init__(self, master)
         self.create_widgets()
 
-    def set_label_str(self, input_str):
-        self.label_str.set(input_str)
+    def clear(self):
+        self.options_list.delete(0, END)
 
     def add_option(self):
         d = OptionsDialog(self)
         if d.result is not None:
+            self.master.add_option(self.global_option, *d.result)
             self.options_list.insert(END, '{}={}'.format(*d.result))
 
     def edit_option(self):
@@ -592,15 +610,27 @@ class OptionsFrame(Frame):
             if d.result is not None:
                 idx = self.options_list.curselection()
                 self.options_list.delete(idx)
+                self.master.edit_option(self.global_option, *d.result)
                 self.options_list.insert(idx, '{}={}'.format(*d.result))
 
     def remove_option(self):
-        self.options_list.delete(self.options_list.curselection())
+        if len(self.options_list.curselection()) > 0:
+            key = self.options_list.get(
+                self.options_list.curselection()[0]
+            ).split('=')[0]
+
+            self.master.remove_option(self.global_option, key)
+            self.options_list.delete(self.options_list.curselection())
 
     def create_widgets(self):
+        label_text = 'Selected file(s) options'
+
+        if self.global_option:
+            label_text = 'Global options'
+
         self.label = Label(
             self,
-            textvariable=self.label_str
+            text=label_text
         )
         self.label.grid(row=0, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
@@ -615,7 +645,8 @@ class OptionsFrame(Frame):
         self.options_list = Listbox(
             self.options_frame,
             xscrollcommand=self.horizontal_scrollbar.set,
-            yscrollcommand=self.vertical_scrollbar.set
+            yscrollcommand=self.vertical_scrollbar.set,
+            exportselection=0
         )
         self.options_list.pack()
         self.options_frame.grid(row=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
@@ -667,14 +698,163 @@ class OptionsFrame(Frame):
         self.buttons_frame.grid(row=2, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
 
+class PlaylistsFrame(Frame):
+    def __init__(self, master):
+        Frame.__init__(self, master)
+        self.create_widgets()
+
+    def clear(self):
+        self.playlists_list.delete(0, END)
+
+    def set_files(self, lines):
+        self.clear()
+        for line in lines:
+            self.playlists_list.insert(END, line)
+
+    def load(self):
+        pass
+
+    def save_as(self):
+        # ask where to save
+        # confirm replace if exists
+        # parse global options
+        pass
+
+    def make_selected_active(self):
+        pass
+
+    def create_widgets(self):
+        self.label = Label(self, text='Playlists')
+        self.label.grid(row=0, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+
+        self.playlists_frame = Frame(self)
+
+        self.vertical_scrollbar = Scrollbar(self.playlists_frame, orient=VERTICAL)
+        self.vertical_scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.horizontal_scrollbar = Scrollbar(self.playlists_frame, orient=HORIZONTAL)
+        self.horizontal_scrollbar.pack(side=BOTTOM, fill=X)
+
+        self.playlists_list = Listbox(
+            self.playlists_frame,
+            xscrollcommand=self.horizontal_scrollbar.set,
+            yscrollcommand=self.vertical_scrollbar.set,
+            exportselection=0
+        )
+        self.playlists_list.pack()
+        self.playlists_frame.grid(row=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+
+        self.horizontal_scrollbar.config(command=self.playlists_list.xview)
+        self.vertical_scrollbar.config(command=self.playlists_list.yview)
+
+        self.buttons_frame = Frame(self)
+
+        self.load_button = Button(
+            self.buttons_frame,
+            text='Load selected',
+            command=self.load
+        )
+        self.load_button.grid(
+            row=0,
+            column=0,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.save_as_button = Button(
+            self.buttons_frame,
+            text='Save as',
+            command=self.save_as
+        )
+        self.save_as_button.grid(
+            row=0,
+            column=1,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.make_active_button = Button(
+            self.buttons_frame,
+            text='Make selected active',
+            command=self.make_selected_active
+        )
+        self.make_active_button.grid(
+            row=1,
+            column=0,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.buttons_frame.grid(row=2, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+
+
 class Application(Frame):
-    def __init__(self, master=None):
+    def __init__(self, master):
+        self.checked_items = set()
+        self.global_options = {}
+        self.file_options = {}
         Frame.__init__(self, master)
         self.master = master
         self.pack(fill=BOTH, expand=YES)
         self.create_widgets()
 
+    def add_option(self, global_option, key, value):
+        if global_option:
+            self.global_options[key] = value
+        else:
+            for filename in self.found_files_frame.get_selected_files():
+                self.add_file_option(filename, key, value)
+
+    def edit_option(self, global_option, key, value):
+        if global_option:
+            self.global_options[key] = value
+        else:
+            for filename in self.found_files_frame.get_selected_files():
+                self.edit_file_option(filename, key, value)
+
+    def remove_option(self, global_option, key):
+        if global_option:
+            if key in self.global_options:
+                del self.global_options[key]
+        else:
+            for filename in self.found_files_frame.get_selected_files():
+                self.remove_file_option(filename, key)
+
+    def add_file_option(self, filename, key, value):
+        if filename not in self.file_options:
+            self.file_options[filename] = {}
+
+        self.file_options[filename][key] = value
+
+    def edit_file_option(self, filename, key, value):
+        self.add_file_option(filename, key, value)
+
+    def remove_file_option(self, filename, key):
+        if filename in self.file_options:
+            if key in self.file_options[filename]:
+                del self.file_options[filename][key]
+
+    def load_playlist_from_file(self, filename):
+        pass
+
+    def save_playlist_as(self, filename):
+        pass
+
+    def reset_state(self):
+        self.checked_items = set()
+        self.global_options = {}
+        self.file_options = {}
+
+        self.found_files_frame.clear()
+        self.global_options_frame.clear()
+        self.file_options_frame.clear()
+        self.playlists_frame.clear()
+
     def load_files(self):
+        self.reset_state()
         new_mode = self.mode_frame.selected_mode_str.get()
         filetypes = FILETYPES[new_mode]['extensions']
 
@@ -682,6 +862,13 @@ class Application(Frame):
         self.found_files_frame.set_files(
             list_files(self.sd_card_frame.sd_card_root.get(), filetypes),
             filetypes
+        )
+
+        self.playlists_frame.set_files(
+            list_playlists(
+                self.sd_card_frame.sd_card_root.get(),
+                FILETYPES[new_mode]['name']
+            )
         )
 
     def create_widgets(self):
@@ -692,22 +879,23 @@ class Application(Frame):
         self.mode_frame.grid(row=1, column=0, padx=PADDING_X, pady=PADDING_Y, columnspan=2, sticky=STICKY)
 
         self.found_files_frame = FoundFilesFrame(self)
-        self.found_files_frame.grid(row=2, column=0, padx=PADDING_X, pady=PADDING_Y, rowspan=2, sticky=STICKY)
+        self.found_files_frame.grid(row=2, column=0, padx=PADDING_X, pady=PADDING_Y, rowspan=3, sticky=STICKY)
 
-        self.global_options_frame = OptionsFrame(self)
-        self.global_options_frame.set_label_str('Global options')
+        self.global_options_frame = OptionsFrame(self, global_option=True)
         self.global_options_frame.grid(row=2, column=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
-        self.file_options_frame = OptionsFrame(self)
-        self.file_options_frame.set_label_str('Selected file(s) options')
+        self.file_options_frame = OptionsFrame(self, global_option=False)
         self.file_options_frame.grid(row=3, column=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+
+        self.playlists_frame = PlaylistsFrame(self)
+        self.playlists_frame.grid(row=4, column=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
         self.master.update()
 
         self.found_files_frame.set_list_height(
             self.file_options_frame.add_button.winfo_rooty() -
             self.found_files_frame.file_list_frame.winfo_rooty() +
-            56 # don't know why
+            56 # don't ask why
         )
 
         self.sd_card_frame.select_card()
@@ -719,10 +907,15 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# Ask for headroom when normalizing
-# save/load playlists (we don't have a playlist frame yet)
-# deal with deleted files when loading a playlist (maybe a select/ clear deleted files button)
-# add button to select files from playlist
+# display options of selected files
+# no file options if no file selected
+# put a * next to files with specific options
+# remove * when no more options for file
+# save/load playlists
+# deal with deleted files when loading a playlist (maybe a select/ clear deleted files button) (tell user to add the files back and reload playlist or they won't be exported as part of the playlist)
+# add button to select files from playlist / OR select marked files
+# fix layout
+# split this file in multiple ones
 
 # Ask for confirmation if loading and current work is not saved
 # Make active asks if you want to save if current work is not saved. Also asks if you want to backup current playlist
