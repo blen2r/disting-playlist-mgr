@@ -654,6 +654,24 @@ class OptionsFrame(Frame):
             self.master.remove_option(self.global_option, key)
             self.options_list.delete(self.options_list.curselection())
 
+    def clear_options(self):
+        if self.global_option:
+            sure = tkMessageBox.askyesno(
+                'Clear',
+                'Are you sure you want to clear the global options?'
+            )
+            if sure:
+                self.master.clear_global_options()
+                self.clear()
+        else:
+            sure = tkMessageBox.askyesno(
+                'Clear',
+                'Are you sure you want to clear the options for the selected file(s)?'
+            )
+            if sure:
+                self.master.clear_file_options()
+                self.clear()
+
     def create_widgets(self):
         label_text = 'Selected file(s) options\n(see README)'
 
@@ -664,7 +682,12 @@ class OptionsFrame(Frame):
             self,
             text=label_text
         )
-        self.label.grid(row=0, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+        self.label.grid(
+            row=0,
+            padx=PADDING_X,
+            pady=PADDING_Y,
+            sticky=STICKY
+        )
 
         self.options_frame = Frame(self)
 
@@ -678,10 +701,15 @@ class OptionsFrame(Frame):
             self.options_frame,
             xscrollcommand=self.horizontal_scrollbar.set,
             yscrollcommand=self.vertical_scrollbar.set,
-            exportselection=0
+            exportselection=0,
         )
         self.options_list.pack()
-        self.options_frame.grid(row=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+        self.options_frame.grid(
+            row=1,
+            padx=PADDING_X,
+            pady=PADDING_Y,
+            sticky=STICKY
+        )
 
         self.horizontal_scrollbar.config(command=self.options_list.xview)
         self.vertical_scrollbar.config(command=self.options_list.yview)
@@ -725,6 +753,20 @@ class OptionsFrame(Frame):
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
+        )
+
+        self.clear_button = Button(
+            self.buttons_frame,
+            text='Clear',
+            command=self.clear_options
+        )
+        self.clear_button.grid(
+            row=1,
+            column=0,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY,
+            columnspan=2
         )
 
         self.buttons_frame.grid(row=2, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
@@ -845,6 +887,15 @@ class Application(Frame):
                         END, '{}={}'.format(k, v)
                     )
 
+    def clear_global_options(self):
+        self.global_options = {}
+
+    def clear_file_options(self):
+        for filename in self.found_files_frame.get_selected_files():
+            if filename in self.file_options:
+                del self.file_options[filename]
+        self.found_files_frame.refresh_files_options()
+
     def add_option(self, global_option, key, value):
         if global_option:
             self.global_options[key] = value
@@ -958,7 +1009,6 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# buttons to clear options with confirm dialog
 # save/load playlists
 # deal with deleted files when loading a playlist (maybe a select/ clear deleted files button) (tell user to add the files back and reload playlist or they won't be exported as part of the playlist)
 # add button to select files from playlist / OR select marked files
