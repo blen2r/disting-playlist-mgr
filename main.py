@@ -287,8 +287,23 @@ class FoundFilesFrame(Frame):
         self.number_marked.set(self.number_marked_template.format(0))
         self.create_widgets()
 
+    def clear_formatting(self, item):
+        if item.startswith('[*] '):
+            return item[4:]
+        return item
+
     def clear(self):
         self.files_list.delete(0, END)
+
+    def refresh_files_options(self):
+        for idx, dirty_filename in enumerate(self.files_list.get(0, END)):
+            filename = self.clear_formatting(dirty_filename)
+            if filename in self.master.file_options:
+                self.files_list.delete(idx)
+                self.files_list.insert(idx, '[*] {}'.format(filename))
+            else:
+                self.files_list.delete(idx)
+                self.files_list.insert(idx, filename)
 
     def set_files(self, lines, filetypes):
         self.clear()
@@ -296,9 +311,14 @@ class FoundFilesFrame(Frame):
             self.files_list.insert(END, line)
         self.label_str.set(self.label_template.format(filetypes))
         self.update_counts()
+        self.refresh_files_options()
 
     def get_selected_files(self):
-        return [self.files_list.get(i) for i in self.files_list.curselection()]
+        return [
+            self.clear_formatting(
+                self.files_list.get(i)
+            ) for i in self.files_list.curselection()
+        ]
 
     def set_list_height(self, height):
         self.file_list_frame.config(height=height)
@@ -306,10 +326,12 @@ class FoundFilesFrame(Frame):
     def select_all(self):
         self.files_list.select_set(0, END)
         self.update_counts()
+        self.master.update_options()
 
     def select_none(self):
         self.files_list.selection_clear(0, END)
         self.update_counts()
+        self.master.update_options()
 
     def update_counts(self, e=None):
         self.number_marked.set(
@@ -322,11 +344,17 @@ class FoundFilesFrame(Frame):
             )
         )
 
+    def selection_changed(self, e=None):
+        self.update_counts()
+        self.master.update_options()
+
     def check_selected(self):
         idxs = self.files_list.curselection()
 
         for i in idxs:
-            self.master.checked_items.add(self.files_list.get(i))
+            self.master.checked_items.add(
+                self.clear_formatting(self.files_list.get(i))
+            )
             self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
 
         self.update_counts()
@@ -335,7 +363,7 @@ class FoundFilesFrame(Frame):
         idxs = self.files_list.curselection()
 
         for i in idxs:
-            item = self.files_list.get(i)
+            item = self.clear_formatting(self.files_list.get(i))
 
             if item in self.master.checked_items:
                 self.master.checked_items.remove(item)
@@ -366,7 +394,7 @@ class FoundFilesFrame(Frame):
         idxs = self.files_list.curselection()
 
         for i in idxs:
-            item = self.files_list.get(i)
+            item = self.clear_formatting(self.files_list.get(i))
             try:
                 normalize(
                     self.master.sd_card_frame.sd_card_root.get(),
@@ -395,7 +423,7 @@ class FoundFilesFrame(Frame):
         idxs = self.files_list.curselection()
 
         for i in idxs:
-            item = self.files_list.get(i)
+            item = self.clear_formatting(self.files_list.get(i))
             try:
                 make_16bit(
                     self.master.sd_card_frame.sd_card_root.get(),
@@ -447,7 +475,7 @@ class FoundFilesFrame(Frame):
         )
         self.horizontal_scrollbar.config(command=self.files_list.xview)
         self.vertical_scrollbar.config(command=self.files_list.yview)
-        self.files_list.bind('<<ListboxSelect>>', self.update_counts)
+        self.files_list.bind('<<ListboxSelect>>', self.selection_changed)
         self.files_list.pack(fill=BOTH, expand=1)
         self.file_list_frame.grid(row=1, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
 
@@ -801,6 +829,20 @@ class Application(Frame):
         self.pack(fill=BOTH, expand=YES)
         self.create_widgets()
 
+    def update_options(self):
+        selected_files = self.found_files_frame.get_selected_files()
+
+        self.file_options_frame.clear()
+
+        if len(selected_files) == 1:
+            if selected_files[0] in self.file_options:
+                for k, v in self.file_options[selected_files[0]].items():
+                    self.file_options_frame.options_list.insert(
+                        END, '{}={}'.format(k, v)
+                    )
+        else:
+            self.file_options_frame.clear() # TEMP, TODO
+
     def add_option(self, global_option, key, value):
         if global_option:
             self.global_options[key] = value
@@ -829,13 +871,19 @@ class Application(Frame):
 
         self.file_options[filename][key] = value
 
+        self.found_files_frame.refresh_files_options()
+
     def edit_file_option(self, filename, key, value):
         self.add_file_option(filename, key, value)
+        self.found_files_frame.refresh_files_options()
 
     def remove_file_option(self, filename, key):
         if filename in self.file_options:
             if key in self.file_options[filename]:
                 del self.file_options[filename][key]
+                if self.file_options[filename] == {}:
+                    del self.file_options[filename]
+        self.found_files_frame.refresh_files_options()
 
     def load_playlist_from_file(self, filename):
         pass
@@ -863,6 +911,7 @@ class Application(Frame):
             list_files(self.sd_card_frame.sd_card_root.get(), filetypes),
             filetypes
         )
+        self.update_options()
 
         self.playlists_frame.set_files(
             list_playlists(
@@ -908,9 +957,7 @@ root.destroy()
 
 # TODO:
 # display options of selected files
-# no file options if no file selected
-# put a * next to files with specific options
-# remove * when no more options for file
+# buttons to copy and paste option set
 # save/load playlists
 # deal with deleted files when loading a playlist (maybe a select/ clear deleted files button) (tell user to add the files back and reload playlist or they won't be exported as part of the playlist)
 # add button to select files from playlist / OR select marked files
