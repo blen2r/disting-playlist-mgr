@@ -454,6 +454,12 @@ class FoundFilesFrame(Frame):
             self.normalize_selected_button.config(state=NORMAL)
             self.make16bit_selected_button.config(state=NORMAL)
 
+    def save_as(self):
+        # ask where to save
+        # confirm replace if exists
+        # parse global options
+        pass # TODO
+
     def create_widgets(self):
         self.label = Label(
             self,
@@ -497,7 +503,7 @@ class FoundFilesFrame(Frame):
             textvariable=self.number_marked
         )
         self.marked_label.pack(padx=100, side=LEFT)
-        self.labels_frame.grid(row=0, columnspan=3)
+        self.labels_frame.grid(row=0, columnspan=4)
 
         self.select_all_button = Button(
             self.buttons_frame,
@@ -581,6 +587,20 @@ class FoundFilesFrame(Frame):
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
+        )
+
+        self.save_as_button = Button(
+            self.buttons_frame,
+            text='Save playlist as',
+            command=self.save_as
+        )
+        self.save_as_button.grid(
+            row=2,
+            column=2,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY,
+            columnspan=2
         )
 
         self.buttons_frame.grid(row=2, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
@@ -786,16 +806,10 @@ class PlaylistsFrame(Frame):
             self.playlists_list.insert(END, line)
 
     def load(self):
-        pass
-
-    def save_as(self):
-        # ask where to save
-        # confirm replace if exists
-        # parse global options
-        pass
+        pass # TODO
 
     def make_selected_active(self):
-        pass
+        pass # TODO
 
     def create_widgets(self):
         self.label = Label(self, text='Playlists')
@@ -836,27 +850,14 @@ class PlaylistsFrame(Frame):
             sticky=STICKY
         )
 
-        self.save_as_button = Button(
-            self.buttons_frame,
-            text='Save as',
-            command=self.save_as
-        )
-        self.save_as_button.grid(
-            row=0,
-            column=1,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
-        )
-
         self.make_active_button = Button(
             self.buttons_frame,
             text='Make selected active',
             command=self.make_selected_active
         )
         self.make_active_button.grid(
-            row=1,
-            column=0,
+            row=0,
+            column=1,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
@@ -939,10 +940,10 @@ class Application(Frame):
         self.found_files_frame.refresh_files_options()
 
     def load_playlist_from_file(self, filename):
-        pass
+        pass # TODO
 
     def save_playlist_as(self, filename):
-        pass
+        pass # TODO
 
     def reset_state(self):
         self.checked_items = set()
