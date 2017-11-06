@@ -295,7 +295,8 @@ class FoundFilesFrame(Frame):
     def clear(self):
         self.files_list.delete(0, END)
 
-    def refresh_files_options(self):
+    def refresh_files_options(self, clear_selection=False):
+        selected_idxs = self.files_list.curselection()
         for idx, dirty_filename in enumerate(self.files_list.get(0, END)):
             filename = self.clear_formatting(dirty_filename)
             if filename in self.master.file_options:
@@ -305,13 +306,16 @@ class FoundFilesFrame(Frame):
                 self.files_list.delete(idx)
                 self.files_list.insert(idx, filename)
 
+            if idx in selected_idxs and not clear_selection:
+                self.files_list.selection_set(idx)
+
     def set_files(self, lines, filetypes):
         self.clear()
         for line in lines:
             self.files_list.insert(END, line)
         self.label_str.set(self.label_template.format(filetypes))
         self.update_counts()
-        self.refresh_files_options()
+        self.refresh_files_options(True)
 
     def get_selected_files(self):
         return [
@@ -651,7 +655,7 @@ class OptionsFrame(Frame):
             self.options_list.delete(self.options_list.curselection())
 
     def create_widgets(self):
-        label_text = 'Selected file(s) options'
+        label_text = 'Selected file(s) options\n(see README)'
 
         if self.global_option:
             label_text = 'Global options'
@@ -840,8 +844,6 @@ class Application(Frame):
                     self.file_options_frame.options_list.insert(
                         END, '{}={}'.format(k, v)
                     )
-        else:
-            self.file_options_frame.clear() # TEMP, TODO
 
     def add_option(self, global_option, key, value):
         if global_option:
@@ -956,8 +958,7 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# display options of selected files
-# buttons to copy and paste option set
+# buttons to clear options with confirm dialog
 # save/load playlists
 # deal with deleted files when loading a playlist (maybe a select/ clear deleted files button) (tell user to add the files back and reload playlist or they won't be exported as part of the playlist)
 # add button to select files from playlist / OR select marked files
