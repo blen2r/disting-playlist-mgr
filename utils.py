@@ -1,4 +1,6 @@
 import os
+import webbrowser
+import soundfile
 from functools import wraps
 from shutil import copyfile
 from pydub import effects, AudioSegment
@@ -59,21 +61,33 @@ def make_16bit(sdcard_root, filename, backup):
     if backup:
         copyfile(full_path, full_path + '_bak')
 
+    data, samplerate = soundfile.read(full_path)
+    soundfile.write(full_path, data, samplerate, subtype='PCM_16')
+
+
+def get_file_details(sdcard_root, filename):
+    full_path = os.path.join(sdcard_root, filename)
+
     sound = AudioSegment.from_file(
         full_path,
         'wav'
     )
-    sound.export(
-        full_path,
-        format='wav',
-        parameters=[
-            '-acodec',
-            'pcm_s16le',
-            '-ac',
-            str(sound.channels),
-            '-ar',
-            str(sound.frame_rate)
-        ]
+
+    return {
+        'channels': str(sound.channels),
+        'sample_rate': str(sound.frame_rate),
+        'bit_depth': str(sound.sample_width * 8),
+        'amplitude': "{0:.2f}".format(sound.max / sound.max_possible_amplitude),
+        'duration': "{0:.2f}".format(sound.duration_seconds),
+    }
+
+
+def open_file(sdcard_root, filename):
+    webbrowser.open(
+        os.path.join(
+            sdcard_root,
+            filename
+        )
     )
 
 

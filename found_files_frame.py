@@ -66,6 +66,7 @@ class FoundFilesFrame(Frame):
             self.files_list.insert(END, line)
         self.label_str.set(self.label_template.format(filetypes))
         self.update_counts()
+        self.update_buttons()
         self.refresh_files_options(True)
 
     def get_selected_files(self):
@@ -81,11 +82,13 @@ class FoundFilesFrame(Frame):
     def select_all(self):
         self.files_list.select_set(0, END)
         self.update_counts()
+        self.update_buttons()
         self.master.update_options()
 
     def select_none(self):
         self.files_list.selection_clear(0, END)
         self.update_counts()
+        self.update_buttons()
         self.master.update_options()
 
     def update_counts(self, e=None):
@@ -99,7 +102,23 @@ class FoundFilesFrame(Frame):
             )
         )
 
+    def update_buttons(self):
+        self.normalize_selected_button.config(state=NORMAL)
+        self.make16bit_selected_button.config(state=NORMAL)
+        self.open_selected_button.config(state=NORMAL)
+        self.selected_details_button.config(state=NORMAL)
+
+        if self.master.get_mode() == 'MIDI' or \
+                len(self.files_list.curselection()) == 0:
+            self.normalize_selected_button.config(state=DISABLED)
+            self.make16bit_selected_button.config(state=DISABLED)
+
+        if len(self.files_list.curselection()) != 1:
+            self.open_selected_button.config(state=DISABLED)
+            self.selected_details_button.config(state=DISABLED)
+
     def selection_changed(self, e=None):
+        self.update_buttons()
         self.update_counts()
         self.master.update_options()
 
@@ -152,7 +171,7 @@ class FoundFilesFrame(Frame):
             item = self.clear_formatting(self.files_list.get(i))
             try:
                 utils.normalize(
-                    self.master.sd_card_frame.sd_card_root.get(),
+                    self.master.get_sd_card_root(),
                     item,
                     backup,
                     headroom
@@ -181,7 +200,7 @@ class FoundFilesFrame(Frame):
             item = self.clear_formatting(self.files_list.get(i))
             try:
                 utils.make_16bit(
-                    self.master.sd_card_frame.sd_card_root.get(),
+                    self.master.get_sd_card_root(),
                     item,
                     backup
                 )
@@ -197,13 +216,37 @@ class FoundFilesFrame(Frame):
             'Done!'
         )
 
-    def set_midi_mode(self, midi_mode):
-        if midi_mode:
-            self.normalize_selected_button.config(state=DISABLED)
-            self.make16bit_selected_button.config(state=DISABLED)
-        else:
-            self.normalize_selected_button.config(state=NORMAL)
-            self.make16bit_selected_button.config(state=NORMAL)
+    def open_selected(self):
+        utils.open_file(
+            self.master.get_sd_card_root(),
+            self.files_list.get(self.files_list.curselection()[0])
+        )
+
+    def selected_details(self):
+        filename = self.files_list.curselection()[0]
+        details = utils.get_file_details(
+            self.master.get_sd_card_root(),
+            self.files_list.get(filename)
+        )
+
+        tkMessageBox.showinfo(
+            'Details',
+            """
+            Filename: {filename}\n
+            Duration: {duration} seconds\n
+            Channels: {channels}\n
+            Sample rate: {sample_rate} Hz\n
+            Bit depth: {bit_depth} bit\n
+            Peak amplitude: {amplitude}
+            """.format(
+                filename=filename,
+                duration=details['duration'],
+                channels=details['channels'],
+                sample_rate=details['sample_rate'],
+                bit_depth=details['bit_depth'],
+                amplitude=details['amplitude']
+            )
+        )
 
     def save_as(self):
         # ask where to save
@@ -295,6 +338,19 @@ class FoundFilesFrame(Frame):
             sticky=STICKY
         )
 
+        self.save_as_button = Button(
+            self.buttons_frame,
+            text='Save playlist as',
+            command=self.save_as
+        )
+        self.save_as_button.grid(
+            row=1,
+            column=2,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
         self.check_selected_button = Button(
             self.buttons_frame,
             text='Mark selected',
@@ -302,8 +358,8 @@ class FoundFilesFrame(Frame):
             command=self.check_selected
         )
         self.check_selected_button.grid(
-            row=1,
-            column=2,
+            row=2,
+            column=0,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
@@ -316,8 +372,22 @@ class FoundFilesFrame(Frame):
             command=self.uncheck_selected
         )
         self.uncheck_selected_button.grid(
-            row=1,
-            column=3,
+            row=2,
+            column=1,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.open_selected_button = Button(
+            self.buttons_frame,
+            text='Open file',
+            wraplength=BUTTON_MAX_TEXT_LENGTH,
+            command=self.open_selected
+        )
+        self.open_selected_button.grid(
+            row=2,
+            column=2,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
@@ -330,7 +400,7 @@ class FoundFilesFrame(Frame):
             command=self.normalize_selected
         )
         self.normalize_selected_button.grid(
-            row=2,
+            row=3,
             column=0,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
@@ -344,25 +414,25 @@ class FoundFilesFrame(Frame):
             command=self.make_16bit_selected
         )
         self.make16bit_selected_button.grid(
-            row=2,
+            row=3,
             column=1,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
         )
 
-        self.save_as_button = Button(
+        self.selected_details_button = Button(
             self.buttons_frame,
-            text='Save playlist as',
-            command=self.save_as
+            text='Details',
+            wraplength=BUTTON_MAX_TEXT_LENGTH,
+            command=self.selected_details
         )
-        self.save_as_button.grid(
-            row=2,
+        self.selected_details_button.grid(
+            row=3,
             column=2,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
-            sticky=STICKY,
-            columnspan=2
+            sticky=STICKY
         )
 
         self.buttons_frame.grid(

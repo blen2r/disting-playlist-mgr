@@ -18,6 +18,12 @@ class Application(Frame):
         self.pack(fill=BOTH, expand=YES)
         self.create_widgets()
 
+    def get_sd_card_root(self):
+        return self.sd_card_frame.sd_card_root.get()
+
+    def get_mode(self):
+        return self.mode_frame.selected_mode_str.get()
+
     def update_options(self):
         selected_files = self.found_files_frame.get_selected_files()
 
@@ -99,19 +105,18 @@ class Application(Frame):
 
     def load_files(self):
         self.reset_state()
-        new_mode = self.mode_frame.selected_mode_str.get()
+        new_mode = self.get_mode()
         filetypes = utils.FILETYPES[new_mode]['extensions']
 
-        self.found_files_frame.set_midi_mode(new_mode == 'MIDI')
         self.found_files_frame.set_files(
-            utils.list_files(self.sd_card_frame.sd_card_root.get(), filetypes),
+            utils.list_files(self.get_sd_card_root(), filetypes),
             filetypes
         )
         self.update_options()
 
         self.playlists_frame.set_files(
             utils.list_playlists(
-                self.sd_card_frame.sd_card_root.get(),
+                self.get_sd_card_root(),
                 utils.FILETYPES[new_mode]['name']
             )
         )
