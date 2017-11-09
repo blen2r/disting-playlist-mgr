@@ -1,8 +1,7 @@
 from Tkinter import Frame, Label, StringVar
 from ttk import Combobox
-from constants import PADDING_X, PADDING_Y, STICKY
 
-import utils
+import constants
 
 
 class FileModeSelectionFrame(Frame):
@@ -24,22 +23,22 @@ class FileModeSelectionFrame(Frame):
         self.mode_label.grid(
             row=0,
             column=0,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.mode_combobox = Combobox(
             self,
             textvariable=self.selected_mode_str,
-            values=[i for i, val in utils.FILETYPES.items()]
+            values=[i for i, val in constants.FILETYPES.items()]
         )
         self.selected_mode_str.set('WAV')
         self.mode_combobox.grid(
             row=0,
             column=1,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
         self.mode_combobox.bind('<<ComboboxSelected>>', self.update_selection)

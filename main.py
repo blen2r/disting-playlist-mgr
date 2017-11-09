@@ -1,11 +1,12 @@
-from Tkinter import Tk, Frame, END, BOTH, YES
+import os
 import utils
+import constants
+from Tkinter import Tk, Frame, END, BOTH, YES
 from sd_card_frame import SDCardFrame
 from file_mode_selection_frame import FileModeSelectionFrame
 from found_files_frame import FoundFilesFrame
 from options_frame import OptionsFrame
 from playlists_frame import PlaylistsFrame
-from constants import PADDING_X, PADDING_Y, STICKY
 
 
 class Application(Frame):
@@ -90,8 +91,25 @@ class Application(Frame):
     def load_playlist_from_file(self, filename):
         pass # TODO
 
-    def save_playlist_as(self, filename):
-        pass # TODO
+    def get_current_elements(self):
+        files = []
+
+        for filename in self.checked_items:
+            if os.path.isfile(os.path.join(self.get_sd_card_root(), filename)):
+                options = {}
+
+                if filename in self.file_options:
+                    options = self.file_options[filename]
+
+                files.append({
+                    'filename': filename,
+                    'options': options
+                })
+
+        return {
+            'global_options': self.global_options,
+            'files': files,
+        }
 
     def reset_state(self):
         self.checked_items = set()
@@ -103,10 +121,17 @@ class Application(Frame):
         self.file_options_frame.clear()
         self.playlists_frame.clear()
 
+    def load_playlists(self):
+        self.playlists_frame.set_files(
+            utils.list_playlists(
+                self.get_sd_card_root(),
+                constants.FILETYPES[self.get_mode()]['name']
+            )
+        )
+
     def load_files(self):
         self.reset_state()
-        new_mode = self.get_mode()
-        filetypes = utils.FILETYPES[new_mode]['extensions']
+        filetypes = constants.FILETYPES[self.get_mode()]['extensions']
 
         self.found_files_frame.set_files(
             utils.list_files(self.get_sd_card_root(), filetypes),
@@ -114,69 +139,64 @@ class Application(Frame):
         )
         self.update_options()
 
-        self.playlists_frame.set_files(
-            utils.list_playlists(
-                self.get_sd_card_root(),
-                utils.FILETYPES[new_mode]['name']
-            )
-        )
+        self.load_playlists()
 
     def create_widgets(self):
         self.sd_card_frame = SDCardFrame(self)
         self.sd_card_frame.grid(
             row=0,
             column=0,
-            padx=PADDING_X,
-            pady=PADDING_Y,
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
             columnspan=2,
-            sticky=STICKY
+            sticky=constants.STICKY
         )
 
         self.mode_frame = FileModeSelectionFrame(self)
         self.mode_frame.grid(
             row=1,
             column=0,
-            padx=PADDING_X,
-            pady=PADDING_Y,
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
             columnspan=2,
-            sticky=STICKY
+            sticky=constants.STICKY
         )
 
         self.found_files_frame = FoundFilesFrame(self)
         self.found_files_frame.grid(
             row=2,
             column=0,
-            padx=PADDING_X,
-            pady=PADDING_Y,
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
             rowspan=3,
-            sticky=STICKY
+            sticky=constants.STICKY
         )
 
         self.global_options_frame = OptionsFrame(self, global_option=True)
         self.global_options_frame.grid(
             row=2,
             column=1,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.file_options_frame = OptionsFrame(self, global_option=False)
         self.file_options_frame.grid(
             row=3,
             column=1,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.playlists_frame = PlaylistsFrame(self)
         self.playlists_frame.grid(
             row=4,
             column=1,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.master.update()
@@ -196,10 +216,11 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# save/load playlists
-# deal with deleted files when loading a playlist (maybe a select/ clear deleted files button) (tell user to add the files back and reload playlist or they won't be exported as part of the playlist)
+# load playlists
+# deal with deleted files when loading a playlist (maybe a select/ clear deleted files button) -(tell user to add the files back and reload playlist or they won't be exported as part of the playlist)-
 # add button to select files from playlist / OR select marked files
 # fix layout
+# test linux, windows, osx
 
 # Ask for confirmation if loading and current work is not saved
 # Make active asks if you want to save if current work is not saved. Also asks if you want to backup current playlist

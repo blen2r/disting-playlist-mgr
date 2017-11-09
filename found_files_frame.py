@@ -4,9 +4,12 @@ from Tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
 from constants import PADDING_X, PADDING_Y, STICKY, SELECTION_COLOR, \
     DEFAULT_COLOR, BUTTON_MAX_TEXT_LENGTH, BUTTON_PADDING_X, BUTTON_PADDING_Y
 
+import constants
 import tkSimpleDialog
+import tkFileDialog
 import tkMessageBox
 import utils
+import os
 
 
 class NormalizationHeadroomDialog(tkSimpleDialog.Dialog):
@@ -14,7 +17,7 @@ class NormalizationHeadroomDialog(tkSimpleDialog.Dialog):
         Label(master, text="Headroom:").grid(row=0)
 
         self.e1 = Entry(master)
-        self.e1.insert(0, str(utils.DEFAULT_HEADROOM))
+        self.e1.insert(0, str(constants.DEFAULT_HEADROOM))
 
         self.e1.grid(row=0, column=1)
         return self.e1
@@ -46,7 +49,7 @@ class FoundFilesFrame(Frame):
     def clear(self):
         self.files_list.delete(0, END)
 
-    def refresh_files_options(self, clear_selection=False):
+    def refresh_files_options(self, clear_selection=False, clear_marked=False):
         selected_idxs = self.files_list.curselection()
         for idx, dirty_filename in enumerate(self.files_list.get(0, END)):
             filename = self.clear_formatting(dirty_filename)
@@ -56,6 +59,9 @@ class FoundFilesFrame(Frame):
             else:
                 self.files_list.delete(idx)
                 self.files_list.insert(idx, filename)
+
+            if filename in self.master.checked_items and not clear_marked:
+                self.files_list.itemconfig(idx, {'bg': SELECTION_COLOR})
 
             if idx in selected_idxs and not clear_selection:
                 self.files_list.selection_set(idx)
@@ -67,7 +73,7 @@ class FoundFilesFrame(Frame):
         self.label_str.set(self.label_template.format(filetypes))
         self.update_counts()
         self.update_buttons()
-        self.refresh_files_options(True)
+        self.refresh_files_options(True, True)
 
     def get_selected_files(self):
         return [
@@ -248,11 +254,40 @@ class FoundFilesFrame(Frame):
             )
         )
 
-    def save_as(self):
-        # ask where to save
-        # confirm replace if exists
-        # parse global options
-        pass # TODO
+    def save_playlist_as(self):
+        utils._create_dir(self.master.get_sd_card_root())
+        init_path = os.path.join(
+            self.master.get_sd_card_root(),
+            constants.PLAYLISTS_DIR,
+            constants.FILETYPES[self.master.get_mode()]['name'].lower()
+        )
+        file = tkFileDialog.asksaveasfilename(
+            initialdir=init_path,
+            title="Save as",
+            filetypes=(('playlist', '*.txt'),)
+        )
+
+        if not file:
+            return
+
+        if os.path.isfile(file):
+            confirm = tkMessageBox.askyesno(
+                'Replace?',
+                'Do you want to replace existing file?'
+            )
+
+            if not confirm:
+                return
+
+        try:
+            utils.write_playlist(file, self.master.get_current_elements())
+        except Exception, e:
+            print e
+            tkMessageBox.showwarning(
+                'Error',
+                'Error while processing file {} . See console.'.format(file)
+            )
+        self.master.load_playlists()
 
     def create_widgets(self):
         self.label = Label(
@@ -341,7 +376,7 @@ class FoundFilesFrame(Frame):
         self.save_as_button = Button(
             self.buttons_frame,
             text='Save playlist as',
-            command=self.save_as
+            command=self.save_playlist_as
         )
         self.save_as_button.grid(
             row=1,

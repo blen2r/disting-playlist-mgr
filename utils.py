@@ -1,47 +1,41 @@
 import os
 import webbrowser
 import soundfile
+import constants
 from functools import wraps
 from shutil import copyfile
 from pydub import effects, AudioSegment
 
-DEFAULT_HEADROOM = 0.1
-PLAYLISTS_DIR = 'playlists'
-FILETYPES = {
-    'WAV': {
-        'name': 'WAV',
-        'extensions': ('.wav', ),
-    },
-    'MIDI': {
-        'name': 'MIDI',
-        'extensions': ('.mid', '.midi', ),
-    },
-    'WAVETABLE': {
-        'name': 'Wavetables',
-        'extensions': ('.wav', ),
-    },
-}
+
+def _create_dir(sdcard_root):
+    if not os.path.isdir(
+            os.path.join(sdcard_root, constants.PLAYLISTS_DIR)
+    ):
+        os.mkdir(os.path.join(sdcard_root, constants.PLAYLISTS_DIR))
+
+    for k, v in constants.FILETYPES.items():
+        if not os.path.isdir(
+            os.path.join(
+                sdcard_root, constants.PLAYLISTS_DIR, v['name'].lower()
+            )
+        ):
+            os.mkdir(
+                os.path.join(
+                    sdcard_root,
+                    constants.PLAYLISTS_DIR, v['name'].lower()
+                )
+            )
 
 
 def create_custom_directory(func):
     @wraps(func)
     def decorated_function(sdcard_root, *args, **kwargs):
-        if not os.path.isdir(os.path.join(sdcard_root, PLAYLISTS_DIR)):
-            os.mkdir(os.path.join(sdcard_root, PLAYLISTS_DIR))
-
-        for k, v in FILETYPES.items():
-            if not os.path.isdir(
-                os.path.join(sdcard_root, PLAYLISTS_DIR, v['name'].lower())
-            ):
-                os.mkdir(
-                    os.path.join(sdcard_root, PLAYLISTS_DIR, v['name'].lower())
-                )
-
+        _create_dir(sdcard_root)
         return func(sdcard_root, *args, **kwargs)
     return decorated_function
 
 
-def normalize(sdcard_root, filename, backup, headroom=DEFAULT_HEADROOM):
+def normalize(sdcard_root, filename, backup, headroom=constants.DEFAULT_HEADROOM):
     full_path = os.path.join(sdcard_root, filename)
 
     if backup:
@@ -152,26 +146,8 @@ def dist_to_elements_format(lines, file_types):
     return elements
 
 
-@create_custom_directory
-def write_playlist(
-        sdcard_root,
-        playlist_type,
-        filename,
-        elements,
-        in_playlist_dir=True
-):
-    playlist_type = playlist_type.lower()
+def write_playlist(full_path, elements):
     lines = elements_to_dist_format(elements)
-
-    if in_playlist_dir:
-        full_path = os.path.join(
-            sdcard_root,
-            PLAYLISTS_DIR,
-            playlist_type,
-            filename
-        )
-    else:
-        full_path = os.path.join(sdcard_root, filename)
 
     with open(full_path, 'w') as f:
         f.writelines('\n'.join(lines))
@@ -180,9 +156,11 @@ def write_playlist(
 @create_custom_directory
 def list_playlists(sdcard_root, playlist_type):
     playlist_type = playlist_type.lower()
-    return [f for f in os.listdir(
-        os.path.join(sdcard_root, PLAYLISTS_DIR, playlist_type)
+    lst = [f for f in os.listdir(
+        os.path.join(sdcard_root, constants.PLAYLISTS_DIR, playlist_type)
     ) if f.endswith('.txt')]
+    lst.sort()
+    return lst
 
 
 def list_files(sdcard_root, file_types):
