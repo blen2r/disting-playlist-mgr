@@ -127,6 +127,7 @@ def dist_to_elements_format(lines, file_types):
         if cleaned_line.endswith(file_types):
             if len(current_element) > 0:
                 if current_element.get('fetching_global_options'):
+                    del current_element['fetching_global_options']
                     elements['global_options'] = current_element
                 else:
                     elements['files'].append(current_element)
@@ -134,11 +135,18 @@ def dist_to_elements_format(lines, file_types):
 
             current_element['filename'] = cleaned_line
         else:
-            split_elems = cleaned_line.split('=')
-            current_element[split_elems[0]] = split_elems[1]
+            if current_element.get('fetching_global_options'):
+                split_elems = cleaned_line.split('=')
+                current_element[split_elems[0][1:]] = split_elems[1]
+            else:
+                if 'options' not in current_element:
+                    current_element['options'] = {}
+                split_elems = cleaned_line.split('=')
+                current_element['options'][split_elems[0][1:]] = split_elems[1]
 
     if len(current_element) > 0:
         if current_element.get('fetching_global_options'):
+            del current_element['fetching_global_options']
             elements['global_options'] = current_element
         else:
             elements['files'].append(current_element)
@@ -167,3 +175,19 @@ def list_files(sdcard_root, file_types):
     lst = [f for f in os.listdir(sdcard_root) if f.endswith(file_types)]
     lst.sort()
     return lst
+
+
+def load_playlist(sdcard_root, playlist_type, filename):
+    playlist_type = playlist_type.lower()
+    full_path = os.path.join(
+        sdcard_root,
+        constants.PLAYLISTS_DIR,
+        playlist_type,
+        filename
+    )
+
+    with open(full_path, 'r') as f:
+        return dist_to_elements_format(
+            f.readlines(),
+            constants.FILETYPES[playlist_type.upper()]['extensions']
+        )

@@ -23,7 +23,12 @@ class PlaylistsFrame(Frame):
             self.playlists_list.insert(END, line)
 
     def load(self):
-        pass # TODO
+        elements = utils.load_playlist(
+            self.master.get_sd_card_root(),
+            self.master.get_mode(),
+            self.playlists_list.get(self.playlists_list.curselection()[0])
+        )
+        print elements
 
     def make_selected_active(self):
         try:
