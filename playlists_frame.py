@@ -1,7 +1,10 @@
+import utils
+import os
+import tkMessageBox
+from shutil import copyfile
 from Tkinter import Frame, Button, Label, Listbox, END, Scrollbar, RIGHT, \
-    BOTTOM, X, Y, HORIZONTAL, VERTICAL
-from constants import PADDING_X, PADDING_Y, STICKY, BUTTON_PADDING_X, \
-    BUTTON_PADDING_Y
+    BOTTOM, X, Y, HORIZONTAL, VERTICAL, DISABLED, NORMAL
+import constants
 
 
 class PlaylistsFrame(Frame):
@@ -11,6 +14,8 @@ class PlaylistsFrame(Frame):
 
     def clear(self):
         self.playlists_list.delete(0, END)
+        self.load_button.config(state=DISABLED)
+        self.make_active_button.config(state=DISABLED)
 
     def set_files(self, lines):
         self.clear()
@@ -21,11 +26,41 @@ class PlaylistsFrame(Frame):
         pass # TODO
 
     def make_selected_active(self):
-        pass # TODO
+        try:
+            in_file = os.path.join(
+                self.master.get_sd_card_root(),
+                constants.PLAYLISTS_DIR,
+                constants.FILETYPES[self.master.get_mode()]['name'].lower(),
+                self.playlists_list.get(self.playlists_list.curselection()[0])
+            )
+            copyfile(
+                in_file,
+                os.path.join(self.master.get_sd_card_root(), 'playlist.txt')
+            )
+        except Exception, e:
+            print e
+            tkMessageBox.showwarning(
+                'Error',
+                'Error while processing file {} . See console.'.format(file)
+            )
+        self.master.load_playlists()
+
+    def selection_changed(self, e=None):
+        if len(self.playlists_list.curselection()) > 0:
+            self.load_button.config(state=NORMAL)
+            self.make_active_button.config(state=NORMAL)
+        else:
+            self.load_button.config(state=DISABLED)
+            self.make_active_button.config(state=DISABLED)
 
     def create_widgets(self):
         self.label = Label(self, text='Playlists')
-        self.label.grid(row=0, padx=PADDING_X, pady=PADDING_Y, sticky=STICKY)
+        self.label.grid(
+            row=0,
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
+        )
 
         self.playlists_frame = Frame(self)
 
@@ -47,12 +82,13 @@ class PlaylistsFrame(Frame):
             yscrollcommand=self.vertical_scrollbar.set,
             exportselection=0
         )
+        self.playlists_list.bind('<<ListboxSelect>>', self.selection_changed)
         self.playlists_list.pack()
         self.playlists_frame.grid(
             row=1,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.horizontal_scrollbar.config(command=self.playlists_list.xview)
@@ -68,9 +104,9 @@ class PlaylistsFrame(Frame):
         self.load_button.grid(
             row=0,
             column=0,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
+            padx=constants.BUTTON_PADDING_X,
+            pady=constants.BUTTON_PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.make_active_button = Button(
@@ -81,14 +117,14 @@ class PlaylistsFrame(Frame):
         self.make_active_button.grid(
             row=0,
             column=1,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
+            padx=constants.BUTTON_PADDING_X,
+            pady=constants.BUTTON_PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.buttons_frame.grid(
             row=2,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )

@@ -1,7 +1,6 @@
 from Tkinter import Frame, Label, Entry, END, Button, VERTICAL, RIGHT, Y, \
-    Scrollbar, HORIZONTAL, BOTTOM, X, Listbox
-from constants import PADDING_X, PADDING_Y, STICKY, \
-    BUTTON_PADDING_X, BUTTON_PADDING_Y
+    Scrollbar, HORIZONTAL, BOTTOM, X, Listbox, DISABLED, NORMAL
+import constants
 
 import tkSimpleDialog
 import tkMessageBox
@@ -46,6 +45,16 @@ class OptionsFrame(Frame):
 
     def clear(self):
         self.options_list.delete(0, END)
+        self.edit_button.config(state=DISABLED)
+        self.remove_button.config(state=DISABLED)
+
+    def selection_changed(self, e=None):
+        if len(self.options_list.curselection()) > 0:
+            self.edit_button.config(state=NORMAL)
+            self.remove_button.config(state=NORMAL)
+        else:
+            self.edit_button.config(state=DISABLED)
+            self.remove_button.config(state=DISABLED)
 
     def add_option(self):
         d = OptionsDialog(self)
@@ -74,6 +83,7 @@ class OptionsFrame(Frame):
 
             self.master.remove_option(self.global_option, key)
             self.options_list.delete(self.options_list.curselection())
+        self.selection_changed()
 
     def clear_options(self):
         if self.global_option:
@@ -92,6 +102,7 @@ class OptionsFrame(Frame):
             if sure:
                 self.master.clear_file_options()
                 self.clear()
+        self.selection_changed()
 
     def create_widgets(self):
         label_text = 'Selected file(s) options\n(see README)'
@@ -105,9 +116,9 @@ class OptionsFrame(Frame):
         )
         self.label.grid(
             row=0,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.options_frame = Frame(self)
@@ -130,12 +141,13 @@ class OptionsFrame(Frame):
             yscrollcommand=self.vertical_scrollbar.set,
             exportselection=0,
         )
+        self.options_list.bind('<<ListboxSelect>>', self.selection_changed)
         self.options_list.pack()
         self.options_frame.grid(
             row=1,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.horizontal_scrollbar.config(command=self.options_list.xview)
@@ -151,9 +163,9 @@ class OptionsFrame(Frame):
         self.add_button.grid(
             row=0,
             column=0,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
+            padx=constants.BUTTON_PADDING_X,
+            pady=constants.BUTTON_PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.edit_button = Button(
@@ -164,9 +176,9 @@ class OptionsFrame(Frame):
         self.edit_button.grid(
             row=0,
             column=1,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
+            padx=constants.BUTTON_PADDING_X,
+            pady=constants.BUTTON_PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.remove_button = Button(
@@ -177,9 +189,9 @@ class OptionsFrame(Frame):
         self.remove_button.grid(
             row=0,
             column=2,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
+            padx=constants.BUTTON_PADDING_X,
+            pady=constants.BUTTON_PADDING_Y,
+            sticky=constants.STICKY
         )
 
         self.clear_button = Button(
@@ -190,15 +202,15 @@ class OptionsFrame(Frame):
         self.clear_button.grid(
             row=1,
             column=0,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY,
+            padx=constants.BUTTON_PADDING_X,
+            pady=constants.BUTTON_PADDING_Y,
+            sticky=constants.STICKY,
             columnspan=2
         )
 
         self.buttons_frame.grid(
             row=2,
-            padx=PADDING_X,
-            pady=PADDING_Y,
-            sticky=STICKY
+            padx=constants.PADDING_X,
+            pady=constants.PADDING_Y,
+            sticky=constants.STICKY
         )
