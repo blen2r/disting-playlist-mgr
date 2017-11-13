@@ -301,7 +301,6 @@ root.destroy()
 
 # TODO:
 # disable add button on selected file options if no file is selected
-# add button to select files from playlist / OR select marked files
 # fix layout
 # test linux, windows, osx
 

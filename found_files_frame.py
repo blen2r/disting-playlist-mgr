@@ -309,6 +309,14 @@ class FoundFilesFrame(Frame):
         self.master.load_playlists()
         self.master.mark_clean()
 
+    def select_marked_files(self):
+        self.files_list.selection_clear(0, END)
+        for idx, dirty_filename in enumerate(self.files_list.get(0, END)):
+            filename = self.clear_formatting(dirty_filename)
+
+            if filename in self.master.checked_items:
+                self.files_list.selection_set(idx)
+
     def create_widgets(self):
         self.label = Label(
             self,
@@ -393,12 +401,12 @@ class FoundFilesFrame(Frame):
             sticky=STICKY
         )
 
-        self.save_as_button = Button(
+        self.select_marked_button = Button(
             self.buttons_frame,
-            text='Save playlist as',
-            command=self.save_playlist_as
+            text='Select marked files',
+            command=self.select_marked_files
         )
-        self.save_as_button.grid(
+        self.select_marked_button.grid(
             row=1,
             column=2,
             padx=BUTTON_PADDING_X,
@@ -485,6 +493,19 @@ class FoundFilesFrame(Frame):
         self.selected_details_button.grid(
             row=3,
             column=2,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.save_as_button = Button(
+            self.buttons_frame,
+            text='Save playlist as',
+            command=self.save_playlist_as
+        )
+        self.save_as_button.grid(
+            row=4,
+            column=0,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
