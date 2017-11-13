@@ -17,16 +17,21 @@ class Application(Frame):
         self.file_options = {}
         self.missing_files = set()
         self.dirty = False
+        self.mode = 'WAV'
         Frame.__init__(self, master)
         self.master = master
         self.pack(fill=BOTH, expand=YES)
         self.create_widgets()
+        self.winfo_toplevel().title(constants.WINDOW_TITLE)
 
     def get_sd_card_root(self):
         return self.sd_card_frame.sd_card_root.get()
 
     def get_mode(self):
-        return self.mode_frame.selected_mode_str.get()
+        return self.mode
+
+    def set_mode(self, mode):
+        self.mode = mode
 
     def update_options(self):
         selected_files = self.found_files_frame.get_selected_files()
@@ -43,6 +48,7 @@ class Application(Frame):
     def clear_global_options(self):
         self.global_options = {}
         self.global_options_frame.clear()
+        self.mark_dirty()
 
     def clear_file_options(self):
         for filename in self.found_files_frame.get_selected_files():
@@ -52,6 +58,7 @@ class Application(Frame):
                 # options so safe to clear it
                 self.file_options_frame.clear()
         self.found_files_frame.refresh_files_display()
+        self.mark_dirty()
 
     def add_option(self, global_option, key, value):
         if global_option:
@@ -60,6 +67,7 @@ class Application(Frame):
         else:
             for filename in self.found_files_frame.get_selected_files():
                 self.add_file_option(filename, key, value)
+        self.mark_dirty()
 
     def edit_option(self, global_option, key, value):
         if global_option:
@@ -68,6 +76,7 @@ class Application(Frame):
         else:
             for filename in self.found_files_frame.get_selected_files():
                 self.edit_file_option(filename, key, value)
+        self.mark_dirty()
 
     def remove_option(self, global_option, key):
         if global_option:
@@ -77,6 +86,7 @@ class Application(Frame):
         else:
             for filename in self.found_files_frame.get_selected_files():
                 self.remove_file_option(filename, key)
+        self.mark_dirty()
 
     def add_file_option(self, filename, key, value):
         if filename not in self.file_options:
@@ -195,10 +205,25 @@ If you save a playlist while some items are missing, these items won't be saved 
         self.load_playlists()
 
     def mark_clean(self):
-        pass #TODO: set title and dirty flag + call this function where relevant
+        self.dirty = False
+        self.winfo_toplevel().title(constants.WINDOW_TITLE)
 
     def mark_dirty(self):
-        pass #TODO: set title and dirty flag + call this function where relevant
+        self.dirty = True
+        self.winfo_toplevel().title('* ' + constants.WINDOW_TITLE)
+
+    # hehe
+    def is_dirty(self):
+        return self.dirty
+
+    def mark_file(self, filename):
+        self.checked_items.add(filename)
+        self.mark_dirty()
+
+    def unmark_file(self, filename):
+        if filename in self.checked_items:
+            self.checked_items.remove(filename)
+        self.mark_dirty()
 
     def create_widgets(self):
         self.sd_card_frame = SDCardFrame(self)
@@ -275,10 +300,6 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# Ask for confirmation if loading and current work is not saved
-# Make active asks if you want to save if current work is not saved. Also asks if you want to backup current playlist
-# Ask for confirmation for check/unchk all
-# Ask for confirmation if changing mode and current work is not saved
 # disable add button on selected file options if no file is selected
 # add button to select files from playlist / OR select marked files
 # fix layout

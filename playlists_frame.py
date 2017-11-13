@@ -1,5 +1,6 @@
 import utils
 import os
+import time
 import tkMessageBox
 from shutil import copyfile
 from Tkinter import Frame, Button, Label, Listbox, END, Scrollbar, RIGHT, \
@@ -23,6 +24,14 @@ class PlaylistsFrame(Frame):
             self.playlists_list.insert(END, line)
 
     def load(self):
+        if self.master.is_dirty():
+            sure = tkMessageBox.askyesno(
+                'Unsaved work',
+                'You have unsaved work, are you sure you want to continue?'
+            )
+            if not sure:
+                return
+
         elements = utils.load_playlist(
             self.master.get_sd_card_root(),
             self.master.get_mode(),
@@ -30,8 +39,28 @@ class PlaylistsFrame(Frame):
         )
 
         self.master.load_playlist_from_elements(elements)
+        self.master.mark_clean()
 
     def make_selected_active(self):
+        if os.path.isfile(
+            os.path.join(self.master.get_sd_card_root(), 'playlist.txt')
+        ):
+            yes = tkMessageBox.askyesno(
+                'Backup',
+                'Do you want to backup the current active playlist?'
+            )
+            if yes:
+                copyfile(
+                    os.path.join(
+                        self.master.get_sd_card_root(),
+                        'playlist.txt'
+                    ),
+                    os.path.join(
+                        self.master.get_sd_card_root(),
+                        'playlist.txt_bak_{}'.format(int(time.time()))
+                    )
+                )
+
         try:
             in_file = os.path.join(
                 self.master.get_sd_card_root(),

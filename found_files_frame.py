@@ -143,14 +143,12 @@ class FoundFilesFrame(Frame):
         self.update_counts()
         self.master.update_options()
 
-    def check_selected(self):
+    def mark_selected(self):
         idxs = self.files_list.curselection()
 
         for i in idxs:
             filename = self.clear_formatting(self.files_list.get(i))
-            self.master.checked_items.add(
-                filename
-            )
+            self.master.mark_file(filename)
 
             if os.path.isfile(
                 os.path.join(self.master.get_sd_card_root(), filename)
@@ -161,14 +159,13 @@ class FoundFilesFrame(Frame):
 
         self.update_counts()
 
-    def uncheck_selected(self):
+    def unmark_selected(self):
         idxs = self.files_list.curselection()
 
         for i in idxs:
-            item = self.clear_formatting(self.files_list.get(i))
+            filename = self.clear_formatting(self.files_list.get(i))
 
-            if item in self.master.checked_items:
-                self.master.checked_items.remove(item)
+            self.master.unmark_file(filename)
 
             self.files_list.itemconfig(
                 i,
@@ -310,6 +307,7 @@ class FoundFilesFrame(Frame):
                 'Error while processing file {} . See console.'.format(file)
             )
         self.master.load_playlists()
+        self.master.mark_clean()
 
     def create_widgets(self):
         self.label = Label(
@@ -408,13 +406,13 @@ class FoundFilesFrame(Frame):
             sticky=STICKY
         )
 
-        self.check_selected_button = Button(
+        self.mark_selected_button = Button(
             self.buttons_frame,
             text='Mark selected',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
-            command=self.check_selected
+            command=self.mark_selected
         )
-        self.check_selected_button.grid(
+        self.mark_selected_button.grid(
             row=2,
             column=0,
             padx=BUTTON_PADDING_X,
@@ -422,13 +420,13 @@ class FoundFilesFrame(Frame):
             sticky=STICKY
         )
 
-        self.uncheck_selected_button = Button(
+        self.unmark_selected_button = Button(
             self.buttons_frame,
             text='Unmark selected',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
-            command=self.uncheck_selected
+            command=self.unmark_selected
         )
-        self.uncheck_selected_button.grid(
+        self.unmark_selected_button.grid(
             row=2,
             column=1,
             padx=BUTTON_PADDING_X,

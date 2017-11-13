@@ -7,6 +7,7 @@ STICKY = 'NW'
 SELECTION_COLOR = 'yellow'
 DEFAULT_COLOR = 'white'
 MISSING_COLOR = 'red'
+WINDOW_TITLE = "Disting Playlist Manager"
 
 DEFAULT_HEADROOM = 0.1
 
