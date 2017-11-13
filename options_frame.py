@@ -20,6 +20,7 @@ class OptionsDialog(tkSimpleDialog.Dialog):
 
         if self.key is not None:
             self.e1.insert(0, self.key)
+            self.e1.config(state='disabled')
 
         self.e2 = Entry(master)
         if self.value is not None:
@@ -56,13 +57,24 @@ class OptionsFrame(Frame):
             self.edit_button.config(state=DISABLED)
             self.remove_button.config(state=DISABLED)
 
-    def add_option(self):
+    def add_or_edit_option(self, key, value):
+        found = False
+        for idx in xrange(self.options_list.size()):
+            if self.options_list.get(idx).split('=')[0] == key:
+                found = True
+                self.options_list.delete(idx)
+                self.options_list.insert(idx, '{}={}'.format(key, value))
+                break
+
+        if not found:
+            self.options_list.insert(END, '{}={}'.format(key, value))
+
+    def add_option_dialog(self):
         d = OptionsDialog(self)
         if d.result is not None:
             self.master.add_option(self.global_option, *d.result)
-            self.options_list.insert(END, '{}={}'.format(*d.result))
 
-    def edit_option(self):
+    def edit_option_dialog(self):
         if len(self.options_list.curselection()) > 0:
             values = self.options_list.get(
                 self.options_list.curselection()[0]
@@ -70,19 +82,18 @@ class OptionsFrame(Frame):
             d = OptionsDialog(self, key=values[0], value=values[1])
 
             if d.result is not None:
-                idx = self.options_list.curselection()
-                self.options_list.delete(idx)
                 self.master.edit_option(self.global_option, *d.result)
-                self.options_list.insert(idx, '{}={}'.format(*d.result))
 
-    def remove_option(self):
+    def remove_option(self, key):
+        for idx in xrange(self.options_list.size()):
+            if self.options_list.get(idx).split('=')[0] == key:
+                self.options_list.delete(idx)
+
+    def remove_option_action(self):
         if len(self.options_list.curselection()) > 0:
-            key = self.options_list.get(
-                self.options_list.curselection()[0]
-            ).split('=')[0]
-
-            self.master.remove_option(self.global_option, key)
-            self.options_list.delete(self.options_list.curselection())
+            for idx in self.options_list.curselection():
+                key = self.options_list.get(idx).split('=')[0]
+                self.master.remove_option(self.global_option, key)
         self.selection_changed()
 
     def clear_options(self):
@@ -93,7 +104,6 @@ class OptionsFrame(Frame):
             )
             if sure:
                 self.master.clear_global_options()
-                self.clear()
         else:
             sure = tkMessageBox.askyesno(
                 'Clear',
@@ -101,7 +111,6 @@ class OptionsFrame(Frame):
             )
             if sure:
                 self.master.clear_file_options()
-                self.clear()
         self.selection_changed()
 
     def create_widgets(self):
@@ -158,7 +167,7 @@ class OptionsFrame(Frame):
         self.add_button = Button(
             self.buttons_frame,
             text='Add',
-            command=self.add_option
+            command=self.add_option_dialog
         )
         self.add_button.grid(
             row=0,
@@ -171,7 +180,7 @@ class OptionsFrame(Frame):
         self.edit_button = Button(
             self.buttons_frame,
             text='Edit',
-            command=self.edit_option
+            command=self.edit_option_dialog
         )
         self.edit_button.grid(
             row=0,
@@ -184,7 +193,7 @@ class OptionsFrame(Frame):
         self.remove_button = Button(
             self.buttons_frame,
             text='Remove',
-            command=self.remove_option
+            command=self.remove_option_action
         )
         self.remove_button.grid(
             row=0,

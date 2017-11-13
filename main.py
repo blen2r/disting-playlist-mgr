@@ -1,6 +1,7 @@
 import os
 import utils
 import constants
+import tkMessageBox
 from Tkinter import Tk, Frame, END, BOTH, YES
 from sd_card_frame import SDCardFrame
 from file_mode_selection_frame import FileModeSelectionFrame
@@ -14,6 +15,8 @@ class Application(Frame):
         self.checked_items = set()
         self.global_options = {}
         self.file_options = {}
+        self.missing_files = set()
+        self.dirty = False
         Frame.__init__(self, master)
         self.master = master
         self.pack(fill=BOTH, expand=YES)
@@ -39,16 +42,21 @@ class Application(Frame):
 
     def clear_global_options(self):
         self.global_options = {}
+        self.global_options_frame.clear()
 
     def clear_file_options(self):
         for filename in self.found_files_frame.get_selected_files():
             if filename in self.file_options:
                 del self.file_options[filename]
-        self.found_files_frame.refresh_files_options()
+                # since file is selected, file_options_frame displays its
+                # options so safe to clear it
+                self.file_options_frame.clear()
+        self.found_files_frame.refresh_files_display()
 
     def add_option(self, global_option, key, value):
         if global_option:
             self.global_options[key] = value
+            self.global_options_frame.add_or_edit_option(key, value)
         else:
             for filename in self.found_files_frame.get_selected_files():
                 self.add_file_option(filename, key, value)
@@ -56,6 +64,7 @@ class Application(Frame):
     def edit_option(self, global_option, key, value):
         if global_option:
             self.global_options[key] = value
+            self.global_options_frame.add_or_edit_option(key, value)
         else:
             for filename in self.found_files_frame.get_selected_files():
                 self.edit_file_option(filename, key, value)
@@ -64,6 +73,7 @@ class Application(Frame):
         if global_option:
             if key in self.global_options:
                 del self.global_options[key]
+                self.global_options_frame.remove_option(key)
         else:
             for filename in self.found_files_frame.get_selected_files():
                 self.remove_file_option(filename, key)
@@ -74,11 +84,14 @@ class Application(Frame):
 
         self.file_options[filename][key] = value
 
-        self.found_files_frame.refresh_files_options()
+        self.found_files_frame.refresh_files_display()
+
+        if filename in self.found_files_frame.get_selected_files():
+            self.file_options_frame.add_or_edit_option(key, value)
 
     def edit_file_option(self, filename, key, value):
         self.add_file_option(filename, key, value)
-        self.found_files_frame.refresh_files_options()
+        self.found_files_frame.refresh_files_display()
 
     def remove_file_option(self, filename, key):
         if filename in self.file_options:
@@ -86,10 +99,47 @@ class Application(Frame):
                 del self.file_options[filename][key]
                 if self.file_options[filename] == {}:
                     del self.file_options[filename]
-        self.found_files_frame.refresh_files_options()
 
-    def load_playlist_from_file(self, filename):
-        pass # TODO
+        if filename in self.found_files_frame.get_selected_files():
+            self.file_options_frame.remove_option(key)
+
+        self.found_files_frame.refresh_files_display()
+
+    def load_playlist_from_elements(self, elements):
+        self.global_options = elements.get('global_options', {})
+        self.checked_items = set()
+        self.file_options = {}
+        self.missing_files = set()
+        self.global_options_frame.clear()
+        self.file_options_frame.clear()
+
+        for file in elements.get('files', []):
+            if file.get('options', {}) != {}:
+                self.file_options[file['filename']] = file['options']
+                full_path = os.path.join(
+                    self.get_sd_card_root(),
+                    file['filename']
+                )
+                if not os.path.isfile(full_path):
+                    self.missing_files.add(file['filename'])
+            self.checked_items.add(file['filename'])
+
+            self.found_files_frame.add_missing_file(file['filename'])
+        self.found_files_frame.refresh_files_display()
+        self.found_files_frame.select_none()
+
+        if elements.get('global_options', {}) != {}:
+            for k, v in elements['global_options'].items():
+                self.add_option(True, k, v)
+
+        if len(self.missing_files) > 0:
+            tkMessageBox.showwarning(
+                'Warning',
+                '''Some files from the playlist couldn't be found. They were highlighted in red.\n
+You can put them back on the SD card and reload the playlist to clear the view.\n
+If you save a playlist while some items are missing, these items won't be saved as part of the playlist.
+                '''
+            )
 
     def get_current_elements(self):
         files = []
@@ -115,11 +165,14 @@ class Application(Frame):
         self.checked_items = set()
         self.global_options = {}
         self.file_options = {}
+        self.missing_files = set()
 
         self.found_files_frame.clear()
         self.global_options_frame.clear()
         self.file_options_frame.clear()
         self.playlists_frame.clear()
+
+        self.mark_clean()
 
     def load_playlists(self):
         self.playlists_frame.set_files(
@@ -140,6 +193,12 @@ class Application(Frame):
         self.update_options()
 
         self.load_playlists()
+
+    def mark_clean(self):
+        pass #TODO: set title and dirty flag + call this function where relevant
+
+    def mark_dirty(self):
+        pass #TODO: set title and dirty flag + call this function where relevant
 
     def create_widgets(self):
         self.sd_card_frame = SDCardFrame(self)
@@ -216,19 +275,18 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# load playlists
-# deal with deleted files when loading a playlist (maybe a select/ clear deleted files button) -(tell user to add the files back and reload playlist or they won't be exported as part of the playlist)-
-# add button to select files from playlist / OR select marked files
-# fix layout
-# test linux, windows, osx
-
 # Ask for confirmation if loading and current work is not saved
 # Make active asks if you want to save if current work is not saved. Also asks if you want to backup current playlist
 # Ask for confirmation for check/unchk all
 # Ask for confirmation if changing mode and current work is not saved
+# disable add button on selected file options if no file is selected
+# add button to select files from playlist / OR select marked files
+# fix layout
+# test linux, windows, osx
 
 
-# TODO: do the same for midi files, wavetables and their playlists
+
+# TODO:
 # Loading wavetables
 # Wavetables can be loaded in one of two ways: as a single WAV file containing all the waveforms
 # concatenated, or as a folder of WAV files, one per waveform.

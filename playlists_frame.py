@@ -28,7 +28,8 @@ class PlaylistsFrame(Frame):
             self.master.get_mode(),
             self.playlists_list.get(self.playlists_list.curselection()[0])
         )
-        print elements
+
+        self.master.load_playlist_from_elements(elements)
 
     def make_selected_active(self):
         try:

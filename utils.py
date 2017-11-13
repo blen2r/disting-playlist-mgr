@@ -167,13 +167,13 @@ def list_playlists(sdcard_root, playlist_type):
     lst = [f for f in os.listdir(
         os.path.join(sdcard_root, constants.PLAYLISTS_DIR, playlist_type)
     ) if f.endswith('.txt')]
-    lst.sort()
+    lst = sorted(lst, key=lambda s: s.lower())
     return lst
 
 
 def list_files(sdcard_root, file_types):
     lst = [f for f in os.listdir(sdcard_root) if f.endswith(file_types)]
-    lst.sort()
+    lst = sorted(lst, key=lambda s: s.lower())
     return lst
 
 

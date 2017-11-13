@@ -2,7 +2,8 @@ from Tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
     Button, VERTICAL, RIGHT, Y, Scrollbar, HORIZONTAL, BOTTOM, X, Listbox, \
     EXTENDED, BOTH, LEFT
 from constants import PADDING_X, PADDING_Y, STICKY, SELECTION_COLOR, \
-    DEFAULT_COLOR, BUTTON_MAX_TEXT_LENGTH, BUTTON_PADDING_X, BUTTON_PADDING_Y
+    DEFAULT_COLOR, BUTTON_MAX_TEXT_LENGTH, BUTTON_PADDING_X, \
+    BUTTON_PADDING_Y, MISSING_COLOR
 
 import constants
 import tkSimpleDialog
@@ -49,7 +50,7 @@ class FoundFilesFrame(Frame):
     def clear(self):
         self.files_list.delete(0, END)
 
-    def refresh_files_options(self, clear_selection=False, clear_marked=False):
+    def refresh_files_display(self, clear_selection=False, clear_marked=False):
         selected_idxs = self.files_list.curselection()
         for idx, dirty_filename in enumerate(self.files_list.get(0, END)):
             filename = self.clear_formatting(dirty_filename)
@@ -60,7 +61,9 @@ class FoundFilesFrame(Frame):
                 self.files_list.delete(idx)
                 self.files_list.insert(idx, filename)
 
-            if filename in self.master.checked_items and not clear_marked:
+            if filename in self.master.missing_files:
+                self.files_list.itemconfig(idx, {'bg': MISSING_COLOR})
+            elif filename in self.master.checked_items and not clear_marked:
                 self.files_list.itemconfig(idx, {'bg': SELECTION_COLOR})
 
             if idx in selected_idxs and not clear_selection:
@@ -73,7 +76,19 @@ class FoundFilesFrame(Frame):
         self.label_str.set(self.label_template.format(filetypes))
         self.update_counts()
         self.update_buttons()
-        self.refresh_files_options(True, True)
+        self.refresh_files_display(True, True)
+
+    def add_missing_file(self, filename):
+        current_files = set(self.files_list.get(0, END))
+        current_files.add(filename)
+        current_files = sorted(
+            current_files,
+            key=lambda s: self.clear_formatting(s).lower()
+        )
+        self.set_files(
+            current_files,
+            constants.FILETYPES[self.master.get_mode()]['name']
+        )
 
     def get_selected_files(self):
         return [
@@ -132,10 +147,17 @@ class FoundFilesFrame(Frame):
         idxs = self.files_list.curselection()
 
         for i in idxs:
+            filename = self.clear_formatting(self.files_list.get(i))
             self.master.checked_items.add(
-                self.clear_formatting(self.files_list.get(i))
+                filename
             )
-            self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
+
+            if os.path.isfile(
+                os.path.join(self.master.get_sd_card_root(), filename)
+            ):
+                self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
+            else:
+                self.files_list.itemconfig(i, {'bg': MISSING_COLOR})
 
         self.update_counts()
 
