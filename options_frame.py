@@ -113,6 +113,12 @@ class OptionsFrame(Frame):
                 self.master.clear_file_options()
         self.selection_changed()
 
+    def no_file_selected(self, value):
+        if value:
+            self.add_button.config(state=DISABLED)
+        else:
+            self.add_button.config(state=NORMAL)
+
     def create_widgets(self):
         label_text = 'Selected file(s) options\n(see README)'
 

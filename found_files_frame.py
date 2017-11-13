@@ -102,15 +102,11 @@ class FoundFilesFrame(Frame):
 
     def select_all(self):
         self.files_list.select_set(0, END)
-        self.update_counts()
-        self.update_buttons()
-        self.master.update_options()
+        self.selection_changed()
 
     def select_none(self):
         self.files_list.selection_clear(0, END)
-        self.update_counts()
-        self.update_buttons()
-        self.master.update_options()
+        self.selection_changed()
 
     def update_counts(self, e=None):
         self.number_marked.set(

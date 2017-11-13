@@ -38,6 +38,11 @@ class Application(Frame):
 
         self.file_options_frame.clear()
 
+        if len(selected_files) == 0:
+            self.file_options_frame.no_file_selected(True)
+        else:
+            self.file_options_frame.no_file_selected(False)
+
         if len(selected_files) == 1:
             if selected_files[0] in self.file_options:
                 for k, v in self.file_options[selected_files[0]].items():
@@ -300,7 +305,6 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# disable add button on selected file options if no file is selected
 # fix layout
 # test linux, windows, osx
 
