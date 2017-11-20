@@ -311,6 +311,7 @@ root.destroy()
 # wavetables
 # fix layout
 # test linux, windows, osx, python 3
+# write readme
 
 
 
@@ -332,7 +333,6 @@ root.destroy()
 # folders.
 
 
-# wavetables have fixed playlist name "playlist-wavetable.txt"
 # "add a folder" validates that it contains at least one wav file, max 64, makes them mono and 16 bit, build the playlist.txt for it
 # distinguish folders in list
 # all buttons and options that don't apply to a folder should be greyed out

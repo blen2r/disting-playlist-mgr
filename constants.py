@@ -20,15 +20,18 @@ FILETYPES = {
         'name': 'WAV',
         'extensions': ('.wav', ),
         'playlist_prefix': '',
+        'fixed_playlist_name': None,
     },
     'MIDI': {
         'name': 'MIDI',
         'extensions': ('.mid', '.midi', ),
         'playlist_prefix': 'midi-',
+        'fixed_playlist_name': None,
     },
     'WAVETABLE': {
         'name': 'Wavetables',
         'extensions': ('.wav', ),
         'playlist_prefix': '',
+        'fixed_playlist_name': 'playlist-wavetable.txt',
     },
 }

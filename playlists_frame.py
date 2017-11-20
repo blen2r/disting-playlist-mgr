@@ -69,22 +69,29 @@ class PlaylistsFrame(Frame):
         self.master.mark_clean()
 
     def make_selected_active(self):
-        d = SuffixDialog(self)
-        suffix = d.result
-
-        if suffix is None:
-            return
-
-        filename = constants.FILETYPES[
+        if constants.FILETYPES[
             self.master.get_mode()
-        ]['playlist_prefix'] + 'playlist.txt'
-        if suffix != '':
-            suffix = suffix.strip()
-            if suffix.startswith('-'):
-                suffix = suffix[1:]
+        ]['fixed_playlist_name']:
             filename = constants.FILETYPES[
                 self.master.get_mode()
-            ]['playlist_prefix'] + 'playlist-{}.txt'.format(suffix)
+            ]['fixed_playlist_name']
+        else:
+            d = SuffixDialog(self)
+            suffix = d.result
+
+            if suffix is None:
+                return
+
+            filename = constants.FILETYPES[
+                self.master.get_mode()
+            ]['playlist_prefix'] + 'playlist.txt'
+            if suffix != '':
+                suffix = suffix.strip()
+                if suffix.startswith('-'):
+                    suffix = suffix[1:]
+                filename = constants.FILETYPES[
+                    self.master.get_mode()
+                ]['playlist_prefix'] + 'playlist-{}.txt'.format(suffix)
 
         if os.path.isfile(
             os.path.join(self.master.get_sd_card_root(), filename)
