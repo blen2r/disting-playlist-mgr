@@ -305,10 +305,10 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# "make active" for MIDI should be midi-playlist.txt
 # The maximum number of sample files per playlist is 64
+# wavetables
 # fix layout
-# test linux, windows, osx
+# test linux, windows, osx, python 3
 
 
 

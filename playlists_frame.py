@@ -10,10 +10,18 @@ import constants
 
 
 class SuffixDialog(tkSimpleDialog.Dialog):
+    def __init__(self, parent, title=None, key=None, value=None):
+        self.parent = parent
+        tkSimpleDialog.Dialog.__init__(self, parent, title)
+
     def body(self, master):
+        prefix = constants.FILETYPES[
+            self.parent.master.get_mode()
+        ]['playlist_prefix']
+
         Label(
             master,
-            text='Suffix (blank for no suffix): playlist-'
+            text='Suffix (blank for no suffix): {}playlist-'.format(prefix)
         ).grid(row=0)
 
         self.e1 = Entry(master)
@@ -64,12 +72,19 @@ class PlaylistsFrame(Frame):
         d = SuffixDialog(self)
         suffix = d.result
 
-        filename = 'playlist.txt'
-        if suffix:
+        if suffix is None:
+            return
+
+        filename = constants.FILETYPES[
+            self.master.get_mode()
+        ]['playlist_prefix'] + 'playlist.txt'
+        if suffix != '':
             suffix = suffix.strip()
             if suffix.startswith('-'):
                 suffix = suffix[1:]
-            filename = 'playlist-{}.txt'.format(suffix)
+            filename = constants.FILETYPES[
+                self.master.get_mode()
+            ]['playlist_prefix'] + 'playlist-{}.txt'.format(suffix)
 
         if os.path.isfile(
             os.path.join(self.master.get_sd_card_root(), filename)

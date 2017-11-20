@@ -17,13 +17,16 @@ FILETYPES = {
     'WAV': {
         'name': 'WAV',
         'extensions': ('.wav', ),
+        'playlist_prefix': '',
     },
     'MIDI': {
         'name': 'MIDI',
         'extensions': ('.mid', '.midi', ),
+        'playlist_prefix': 'midi-',
     },
     'WAVETABLE': {
         'name': 'Wavetables',
         'extensions': ('.wav', ),
+        'playlist_prefix': '',
     },
 }
