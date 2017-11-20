@@ -63,7 +63,7 @@ class FoundFilesFrame(Frame):
 
             if filename in self.master.missing_files:
                 self.files_list.itemconfig(idx, {'bg': MISSING_COLOR})
-            elif filename in self.master.checked_items and not clear_marked:
+            elif filename in self.master.marked_items and not clear_marked:
                 self.files_list.itemconfig(idx, {'bg': SELECTION_COLOR})
 
             if idx in selected_idxs and not clear_selection:
@@ -110,7 +110,7 @@ class FoundFilesFrame(Frame):
 
     def update_counts(self, e=None):
         self.number_marked.set(
-            self.number_marked_template.format(len(self.master.checked_items))
+            self.number_marked_template.format(len(self.master.marked_items))
         )
 
         self.number_selected.set(
@@ -141,6 +141,18 @@ class FoundFilesFrame(Frame):
 
     def mark_selected(self):
         idxs = self.files_list.curselection()
+
+        if len(idxs) + self.master.get_marked_count() > constants.MAX_FILES_PER_PLAYLIST:
+            tkMessageBox.showerror(
+                'Error',
+                '''Error! Playlists can contain up to {} files.\n
+You currently have {} marked and {} selected.'''.format(
+                    constants.MAX_FILES_PER_PLAYLIST,
+                    self.master.get_marked_count(),
+                    len(idxs)
+                )
+            )
+            return
 
         for i in idxs:
             filename = self.clear_formatting(self.files_list.get(i))
@@ -310,7 +322,7 @@ class FoundFilesFrame(Frame):
         for idx, dirty_filename in enumerate(self.files_list.get(0, END)):
             filename = self.clear_formatting(dirty_filename)
 
-            if filename in self.master.checked_items:
+            if filename in self.master.marked_items:
                 self.files_list.selection_set(idx)
 
     def create_widgets(self):

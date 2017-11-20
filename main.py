@@ -12,7 +12,7 @@ from playlists_frame import PlaylistsFrame
 
 class Application(Frame):
     def __init__(self, master):
-        self.checked_items = set()
+        self.marked_items = set()
         self.global_options = {}
         self.file_options = {}
         self.missing_files = set()
@@ -122,7 +122,7 @@ class Application(Frame):
 
     def load_playlist_from_elements(self, elements):
         self.global_options = elements.get('global_options', {})
-        self.checked_items = set()
+        self.marked_items = set()
         self.file_options = {}
         self.missing_files = set()
         self.global_options_frame.clear()
@@ -137,7 +137,7 @@ class Application(Frame):
                 )
                 if not os.path.isfile(full_path):
                     self.missing_files.add(file['filename'])
-            self.checked_items.add(file['filename'])
+            self.marked_items.add(file['filename'])
 
             self.found_files_frame.add_missing_file(file['filename'])
         self.found_files_frame.refresh_files_display()
@@ -159,7 +159,7 @@ If you save a playlist while some items are missing, these items won't be saved 
     def get_current_elements(self):
         files = []
 
-        for filename in self.checked_items:
+        for filename in self.marked_items:
             if os.path.isfile(os.path.join(self.get_sd_card_root(), filename)):
                 options = {}
 
@@ -177,7 +177,7 @@ If you save a playlist while some items are missing, these items won't be saved 
         }
 
     def reset_state(self):
-        self.checked_items = set()
+        self.marked_items = set()
         self.global_options = {}
         self.file_options = {}
         self.missing_files = set()
@@ -221,13 +221,16 @@ If you save a playlist while some items are missing, these items won't be saved 
     def is_dirty(self):
         return self.dirty
 
+    def get_marked_count(self):
+        return len(self.marked_items)
+
     def mark_file(self, filename):
-        self.checked_items.add(filename)
+        self.marked_items.add(filename)
         self.mark_dirty()
 
     def unmark_file(self, filename):
-        if filename in self.checked_items:
-            self.checked_items.remove(filename)
+        if filename in self.marked_items:
+            self.marked_items.remove(filename)
         self.mark_dirty()
 
     def create_widgets(self):
@@ -305,7 +308,6 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# The maximum number of sample files per playlist is 64
 # wavetables
 # fix layout
 # test linux, windows, osx, python 3

@@ -13,6 +13,8 @@ DEFAULT_HEADROOM = 0.1
 
 PLAYLISTS_DIR = 'playlists'
 
+MAX_FILES_PER_PLAYLIST = 64
+
 FILETYPES = {
     'WAV': {
         'name': 'WAV',
