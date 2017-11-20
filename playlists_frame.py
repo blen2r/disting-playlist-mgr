@@ -2,10 +2,29 @@ import utils
 import os
 import time
 import tkMessageBox
+import tkSimpleDialog
 from shutil import copyfile
 from Tkinter import Frame, Button, Label, Listbox, END, Scrollbar, RIGHT, \
-    BOTTOM, X, Y, HORIZONTAL, VERTICAL, DISABLED, NORMAL
+    BOTTOM, X, Y, HORIZONTAL, VERTICAL, DISABLED, NORMAL, Entry
 import constants
+
+
+class SuffixDialog(tkSimpleDialog.Dialog):
+    def body(self, master):
+        Label(
+            master,
+            text='Suffix (blank for no suffix): playlist-'
+        ).grid(row=0)
+
+        self.e1 = Entry(master)
+        self.e1.grid(row=0, column=1)
+
+        Label(master, text='.txt').grid(row=0, column=2)
+
+        return self.e1
+
+    def apply(self):
+        self.result = self.e1.get()
 
 
 class PlaylistsFrame(Frame):
@@ -42,8 +61,18 @@ class PlaylistsFrame(Frame):
         self.master.mark_clean()
 
     def make_selected_active(self):
+        d = SuffixDialog(self)
+        suffix = d.result
+
+        filename = 'playlist.txt'
+        if suffix:
+            suffix = suffix.strip()
+            if suffix.startswith('-'):
+                suffix = suffix[1:]
+            filename = 'playlist-{}.txt'.format(suffix)
+
         if os.path.isfile(
-            os.path.join(self.master.get_sd_card_root(), 'playlist.txt')
+            os.path.join(self.master.get_sd_card_root(), filename)
         ):
             yes = tkMessageBox.askyesno(
                 'Backup',
@@ -53,11 +82,11 @@ class PlaylistsFrame(Frame):
                 copyfile(
                     os.path.join(
                         self.master.get_sd_card_root(),
-                        'playlist.txt'
+                        filename
                     ),
                     os.path.join(
                         self.master.get_sd_card_root(),
-                        'playlist.txt_bak_{}'.format(int(time.time()))
+                        filename + '_bak_{}'.format(int(time.time()))
                     )
                 )
 
@@ -70,7 +99,7 @@ class PlaylistsFrame(Frame):
             )
             copyfile(
                 in_file,
-                os.path.join(self.master.get_sd_card_root(), 'playlist.txt')
+                os.path.join(self.master.get_sd_card_root(), filename)
             )
         except Exception, e:
             print e
