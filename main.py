@@ -330,3 +330,11 @@ root.destroy()
 # file make up one waveform. This is specified in the playlist via the -wavelength setting (default
 # 600). There are no settings that apply to wavetable folders, nor to the individual files inside the
 # folders.
+
+
+# wavetables have fixed playlist name "playlist-wavetable.txt"
+# "add a folder" validates that it contains at least one wav file, max 64, makes them mono and 16 bit, build the playlist.txt for it
+# distinguish folders in list
+# all buttons and options that don't apply to a folder should be greyed out
+# view content of folder
+# There are no settings that apply to wavetable folders (-nor to the individual files inside the folders-)

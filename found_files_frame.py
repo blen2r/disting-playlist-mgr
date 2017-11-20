@@ -249,6 +249,34 @@ You currently have {} marked and {} selected.'''.format(
             'Done!'
         )
 
+    def make_mono_selected(self):
+        backup = tkMessageBox.askyesno(
+            'Backup',
+            'Do you want to create backups?'
+        )
+
+        idxs = self.files_list.curselection()
+
+        for i in idxs:
+            item = self.clear_formatting(self.files_list.get(i))
+            try:
+                utils.make_mono(
+                    self.master.get_sd_card_root(),
+                    item,
+                    backup
+                )
+            except Exception, e:
+                print e
+                tkMessageBox.showwarning(
+                    'Error',
+                    'Error while processing file {} . See console.'.format(item)
+                )
+
+        tkMessageBox.showinfo(
+            'Done',
+            'Done!'
+        )
+
     def open_selected(self):
         utils.open_file(
             self.master.get_sd_card_root(),
@@ -514,6 +542,19 @@ You currently have {} marked and {} selected.'''.format(
         self.save_as_button.grid(
             row=4,
             column=0,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.make_mono_button = Button(
+            self.buttons_frame,
+            text='Make mono',
+            command=self.make_mono_selected
+        )
+        self.make_mono_button.grid(
+            row=4,
+            column=1,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY

@@ -59,6 +59,21 @@ def make_16bit(sdcard_root, filename, backup):
     soundfile.write(full_path, data, samplerate, subtype='PCM_16')
 
 
+def make_mono(sdcard_root, filename, backup):
+    full_path = os.path.join(sdcard_root, filename)
+
+    if backup:
+        copyfile(full_path, full_path + '_bak')
+
+    sound = AudioSegment.from_file(
+        full_path,
+        'wav'
+    )
+
+    sound = sound.set_channels(1)
+    sound.export(full_path, format='wav')
+
+
 def get_file_details(sdcard_root, filename):
     full_path = os.path.join(sdcard_root, filename)
 
