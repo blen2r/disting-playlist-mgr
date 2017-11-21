@@ -163,7 +163,7 @@ class FoundFilesFrame(Frame):
                 )
             )
         ):
-            self.open_selected_button.config(state=DISABLED)
+            self.selected_details_button.config(state=DISABLED)
             self.normalize_selected_button.config(state=DISABLED)
             self.make16bit_selected_button.config(state=DISABLED)
             self.make_mono_selected_button.config(state=DISABLED)
@@ -315,7 +315,9 @@ You currently have {} marked and {} selected.'''.format(
     def open_selected(self):
         utils.open_file(
             self.master.get_sd_card_root(),
-            self.files_list.get(self.files_list.curselection()[0])
+            self.clear_formatting(
+                self.files_list.get(self.files_list.curselection()[0])
+            )
         )
 
     def selected_details(self):
@@ -515,7 +517,7 @@ You currently have {} marked and {} selected.'''.format(
 
         self.open_selected_button = Button(
             self.buttons_frame,
-            text='Open file',
+            text='Open',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
             command=self.open_selected
         )

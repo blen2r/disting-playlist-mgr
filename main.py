@@ -338,5 +338,3 @@ root.destroy()
 
 
 # if isdir, "mark selected" validates that it contains at least one wav file, max 64, makes them mono and 16 bit, build the playlist.txt for it
-# There are no settings that apply to wavetable folders (-nor to the individual files inside the folders-)
-# view content of folder
