@@ -32,6 +32,7 @@ class Application(Frame):
 
     def set_mode(self, mode):
         self.mode = mode
+        self.load_files()
 
     def update_options(self):
         selected_files = self.found_files_frame.get_selected_files()
@@ -49,6 +50,9 @@ class Application(Frame):
                     self.file_options_frame.options_list.insert(
                         END, '{}={}'.format(k, v)
                     )
+
+    def disable_file_options(self):
+        self.file_options_frame.clear_and_disable()
 
     def clear_global_options(self):
         self.global_options = {}
@@ -135,7 +139,7 @@ class Application(Frame):
                     self.get_sd_card_root(),
                     file['filename']
                 )
-                if not os.path.isfile(full_path):
+                if not utils.exists(full_path):
                     self.missing_files.add(file['filename'])
             self.marked_items.add(file['filename'])
 
@@ -160,7 +164,7 @@ If you save a playlist while some items are missing, these items won't be saved 
         files = []
 
         for filename in self.marked_items:
-            if os.path.isfile(os.path.join(self.get_sd_card_root(), filename)):
+            if utils.exists(os.path.join(self.get_sd_card_root(), filename)):
                 options = {}
 
                 if filename in self.file_options:
@@ -333,8 +337,6 @@ root.destroy()
 # folders.
 
 
-# "add a folder" validates that it contains at least one wav file, max 64, makes them mono and 16 bit, build the playlist.txt for it
-# distinguish folders in list
-# all buttons and options that don't apply to a folder should be greyed out
-# view content of folder
+# if isdir, "mark selected" validates that it contains at least one wav file, max 64, makes them mono and 16 bit, build the playlist.txt for it
 # There are no settings that apply to wavetable folders (-nor to the individual files inside the folders-)
+# view content of folder

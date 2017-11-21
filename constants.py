@@ -1,3 +1,12 @@
+import re
+
+MARKERS = {
+    'FILE_OPTION_MARKER': '*',
+    'DIRECTORY_MARKER': 'D',
+}
+
+META_PATTERN = re.compile('^\[[\*D]{1,' + str(len(MARKERS)) + '}\] ')
+
 BUTTON_MAX_TEXT_LENGTH = 100
 BUTTON_PADDING_X = 0
 BUTTON_PADDING_Y = 0
@@ -30,7 +39,7 @@ FILETYPES = {
     },
     'WAVETABLE': {
         'name': 'Wavetables',
-        'extensions': ('.wav', ),
+        'extensions': ('.wav', 'DIRECTORIES'),
         'playlist_prefix': '',
         'fixed_playlist_name': 'playlist-wavetable.txt',
     },

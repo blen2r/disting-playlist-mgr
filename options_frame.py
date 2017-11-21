@@ -48,6 +48,7 @@ class OptionsFrame(Frame):
         self.options_list.delete(0, END)
         self.edit_button.config(state=DISABLED)
         self.remove_button.config(state=DISABLED)
+        self.clear_button.config(state=NORMAL)
 
     def selection_changed(self, e=None):
         if len(self.options_list.curselection()) > 0:
@@ -118,6 +119,13 @@ class OptionsFrame(Frame):
             self.add_button.config(state=DISABLED)
         else:
             self.add_button.config(state=NORMAL)
+
+    def clear_and_disable(self):
+        self.clear()
+        self.edit_button.config(state=DISABLED)
+        self.remove_button.config(state=DISABLED)
+        self.add_button.config(state=DISABLED)
+        self.clear_button.config(state=DISABLED)
 
     def create_widgets(self):
         label_text = 'Selected file(s) options\n(see README)'

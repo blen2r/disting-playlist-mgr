@@ -26,7 +26,6 @@ class FileModeSelectionFrame(Frame):
                 return
 
         self.master.set_mode(self.selected_mode_str.get())
-        self.master.load_files()
 
     def create_widgets(self):
         self.mode_label = Label(

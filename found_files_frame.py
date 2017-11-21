@@ -31,7 +31,7 @@ class FoundFilesFrame(Frame):
     def __init__(self, master):
         self.master = master
         Frame.__init__(self, master)
-        self.label_template = 'Found files {}:'
+        self.label_template = 'Found files (* for marked, D for directory) {}:'
         self.label_str = StringVar()
         self.label_str.set(self.label_template)
         self.number_selected_template = 'Selected: {}'
@@ -43,8 +43,9 @@ class FoundFilesFrame(Frame):
         self.create_widgets()
 
     def clear_formatting(self, item):
-        if item.startswith('[*] '):
-            return item[4:]
+        m = constants.META_PATTERN.match(item)
+        if m:
+            return item[m.end():]
         return item
 
     def clear(self):
@@ -54,9 +55,23 @@ class FoundFilesFrame(Frame):
         selected_idxs = self.files_list.curselection()
         for idx, dirty_filename in enumerate(self.files_list.get(0, END)):
             filename = self.clear_formatting(dirty_filename)
+
+            markers = set()
             if filename in self.master.file_options:
+                markers.add(constants.MARKERS['FILE_OPTION_MARKER'])
+
+            if os.path.isdir(os.path.join(
+                    self.master.get_sd_card_root(),
+                    filename
+            )):
+                markers.add(constants.MARKERS['DIRECTORY_MARKER'])
+
+            if len(markers) > 0:
                 self.files_list.delete(idx)
-                self.files_list.insert(idx, '[*] {}'.format(filename))
+                self.files_list.insert(idx, '[{}] {}'.format(
+                    ''.join(markers),
+                    filename
+                ))
             else:
                 self.files_list.delete(idx)
                 self.files_list.insert(idx, filename)
@@ -122,22 +137,43 @@ class FoundFilesFrame(Frame):
     def update_buttons(self):
         self.normalize_selected_button.config(state=NORMAL)
         self.make16bit_selected_button.config(state=NORMAL)
+        self.make_mono_selected_button.config(state=NORMAL)
         self.open_selected_button.config(state=NORMAL)
         self.selected_details_button.config(state=NORMAL)
+        self.mark_selected_button.config(state=NORMAL)
+        self.unmark_selected_button.config(state=NORMAL)
 
         if self.master.get_mode() == 'MIDI' or \
                 len(self.files_list.curselection()) == 0:
             self.normalize_selected_button.config(state=DISABLED)
             self.make16bit_selected_button.config(state=DISABLED)
+            self.make_mono_selected_button.config(state=DISABLED)
+            self.mark_selected_button.config(state=DISABLED)
+            self.unmark_selected_button.config(state=DISABLED)
 
         if len(self.files_list.curselection()) != 1:
             self.open_selected_button.config(state=DISABLED)
             self.selected_details_button.config(state=DISABLED)
 
+        if len(self.files_list.curselection()) == 1 and \
+            os.path.isdir(os.path.join(
+                self.master.get_sd_card_root(),
+                self.clear_formatting(
+                    self.files_list.get(self.files_list.curselection()[0])
+                )
+            )
+        ):
+            self.open_selected_button.config(state=DISABLED)
+            self.normalize_selected_button.config(state=DISABLED)
+            self.make16bit_selected_button.config(state=DISABLED)
+            self.make_mono_selected_button.config(state=DISABLED)
+            self.master.disable_file_options()
+
     def selection_changed(self, e=None):
+        # the order is important here since update_buttons might disable options
+        self.master.update_options()
         self.update_buttons()
         self.update_counts()
-        self.master.update_options()
 
     def mark_selected(self):
         idxs = self.files_list.curselection()
@@ -158,9 +194,8 @@ You currently have {} marked and {} selected.'''.format(
             filename = self.clear_formatting(self.files_list.get(i))
             self.master.mark_file(filename)
 
-            if os.path.isfile(
-                os.path.join(self.master.get_sd_card_root(), filename)
-            ):
+            full_path = os.path.join(self.master.get_sd_card_root(), filename)
+            if utils.exists(full_path):
                 self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
             else:
                 self.files_list.itemconfig(i, {'bg': MISSING_COLOR})
@@ -284,10 +319,10 @@ You currently have {} marked and {} selected.'''.format(
         )
 
     def selected_details(self):
-        filename = self.files_list.curselection()[0]
+        idx = self.files_list.curselection()[0]
         details = utils.get_file_details(
             self.master.get_sd_card_root(),
-            self.files_list.get(filename)
+            self.files_list.get(idx)
         )
 
         tkMessageBox.showinfo(
@@ -300,7 +335,7 @@ You currently have {} marked and {} selected.'''.format(
             Bit depth: {bit_depth} bit\n
             Peak amplitude: {amplitude}
             """.format(
-                filename=filename,
+                filename=self.files_list.get(idx),
                 duration=details['duration'],
                 channels=details['channels'],
                 sample_rate=details['sample_rate'],
@@ -547,12 +582,12 @@ You currently have {} marked and {} selected.'''.format(
             sticky=STICKY
         )
 
-        self.make_mono_button = Button(
+        self.make_mono_selected_button = Button(
             self.buttons_frame,
             text='Make mono',
             command=self.make_mono_selected
         )
-        self.make_mono_button.grid(
+        self.make_mono_selected_button.grid(
             row=4,
             column=1,
             padx=BUTTON_PADDING_X,

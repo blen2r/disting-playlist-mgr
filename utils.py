@@ -187,7 +187,18 @@ def list_playlists(sdcard_root, playlist_type):
 
 
 def list_files(sdcard_root, file_types):
-    lst = [f for f in os.listdir(sdcard_root) if f.endswith(file_types)]
+    directories = False
+    if 'DIRECTORIES' in file_types:
+        directories = True
+        file_types = filter(lambda x: x != 'DIRECTORIES', file_types)
+
+    lst = [
+        f for f in os.listdir(sdcard_root) if (not f.startswith('_')) and
+        (f.endswith(file_types) or (
+            directories and os.path.isdir(os.path.join(sdcard_root, f)) and not
+            f == 'playlists'
+        ))
+    ]
     lst = sorted(lst, key=lambda s: s.lower())
     return lst
 
@@ -206,3 +217,7 @@ def load_playlist(sdcard_root, playlist_type, filename):
             f.readlines(),
             constants.FILETYPES[playlist_type.upper()]['extensions']
         )
+
+
+def exists(full_path):
+    return os.path.isfile(full_path) or os.path.isdir(full_path)
