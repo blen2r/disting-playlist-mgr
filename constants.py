@@ -14,6 +14,7 @@ PADDING_X = 0
 PADDING_Y = 0
 STICKY = 'NW'
 SELECTION_COLOR = 'yellow'
+PROBLEMATIC_DIR_COLOR = 'orange'
 DEFAULT_COLOR = 'white'
 MISSING_COLOR = 'red'
 WINDOW_TITLE = "Disting Playlist Manager"

@@ -5,3 +5,5 @@ explain that selecting multiple files allow to add options but masks individual 
 clearing removes even masked options
 
 files/dirs starting with "_" will be ignored
+
+problematic dirs are highlighted orange, they are not marked but the orange can be cleared with "unmark selected" or fixing the problem and marking it again

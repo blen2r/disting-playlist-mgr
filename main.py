@@ -312,7 +312,7 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# wavetables
+# wavetables (see last line)
 # fix layout
 # test linux, windows, osx, python 3
 # write readme
@@ -337,4 +337,4 @@ root.destroy()
 # folders.
 
 
-# if isdir, "mark selected" validates that it contains at least one wav file, max 64, makes them mono and 16 bit, build the playlist.txt for it
+# saving playlist makes them mono and 16 bit, build the playlist.txt for it

@@ -3,7 +3,7 @@ from Tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
     EXTENDED, BOTH, LEFT
 from constants import PADDING_X, PADDING_Y, STICKY, SELECTION_COLOR, \
     DEFAULT_COLOR, BUTTON_MAX_TEXT_LENGTH, BUTTON_PADDING_X, \
-    BUTTON_PADDING_Y, MISSING_COLOR
+    BUTTON_PADDING_Y, MISSING_COLOR, PROBLEMATIC_DIR_COLOR
 
 import constants
 import tkSimpleDialog
@@ -192,10 +192,42 @@ You currently have {} marked and {} selected.'''.format(
 
         for i in idxs:
             filename = self.clear_formatting(self.files_list.get(i))
-            self.master.mark_file(filename)
-
             full_path = os.path.join(self.master.get_sd_card_root(), filename)
-            if utils.exists(full_path):
+            problematic = False
+
+            if os.path.isdir(full_path):
+                # count number of files
+                lst = [
+                    f for f in os.listdir(full_path) if (
+                        not f.startswith('_') and
+                        f.endswith(
+                            constants.FILETYPES[
+                                self.master.get_mode()
+                            ]['extensions']
+                        ) and
+                        not f == 'playlists'
+                    )
+                ]
+                if len(lst) < 1 or len(lst) > constants.MAX_FILES_PER_PLAYLIST:
+                    # error
+                    tkMessageBox.showerror(
+                        'Error',
+                        '''Error! Playlists can contain up to {} files.\n
+Directory {} contains {} files of the selected type.'''.format(
+                            constants.MAX_FILES_PER_PLAYLIST,
+                            filename,
+                            len(lst)
+                        )
+                    )
+                    problematic = True
+                else:
+                    self.master.mark_file(filename)
+            else:
+                self.master.mark_file(filename)
+
+            if problematic:
+                self.files_list.itemconfig(i, {'bg': PROBLEMATIC_DIR_COLOR})
+            elif utils.exists(full_path):
                 self.files_list.itemconfig(i, {'bg': SELECTION_COLOR})
             else:
                 self.files_list.itemconfig(i, {'bg': MISSING_COLOR})
