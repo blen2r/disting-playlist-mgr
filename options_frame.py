@@ -1,39 +1,57 @@
-from Tkinter import Frame, Label, Entry, END, Button, VERTICAL, RIGHT, Y, \
-    Scrollbar, HORIZONTAL, BOTTOM, X, Listbox, DISABLED, NORMAL
+from tkinter import Frame, Label, Entry, END, Button, VERTICAL, RIGHT, Y, \
+    Scrollbar, HORIZONTAL, BOTTOM, X, Listbox, DISABLED, NORMAL, Toplevel, \
+    StringVar
 import constants
 
-import tkSimpleDialog
-import tkMessageBox
+import tkinter.messagebox as tkMessageBox
 
 
-class OptionsDialog(tkSimpleDialog.Dialog):
-    def __init__(self, parent, title=None, key=None, value=None):
-        self.key = key
-        self.value = value
-        tkSimpleDialog.Dialog.__init__(self, parent, title)
+class OptionsDialog(Toplevel):
+    def __init__(self, parent, key=None, value=None):
+        Toplevel.__init__(self, parent)
 
-    def body(self, master):
-        Label(master, text="Key:").grid(row=0)
-        Label(master, text="Value:").grid(row=1)
+        Label(self, text="Key:").grid(row=0)
+        Label(self, text="Value:").grid(row=1)
 
-        self.e1 = Entry(master)
+        self.key_var = StringVar()
+        self.value_var = StringVar()
 
-        if self.key is not None:
-            self.e1.insert(0, self.key)
+        self.e1 = Entry(self, textvariable=self.key_var)
+        if key is not None:
+            self.e1.insert(0, key)
             self.e1.config(state='disabled')
 
-        self.e2 = Entry(master)
-        if self.value is not None:
-            self.e2.insert(0, self.value)
+        self.e2 = Entry(self, textvariable=self.value_var)
+        if value is not None:
+            self.e2.insert(0, value)
 
         self.e1.grid(row=0, column=1)
         self.e2.grid(row=1, column=1)
-        return self.e1
 
-    def apply(self):
-        key = self.e1.get()
-        value = self.e2.get()
+        self.ok_button = Button(self, text="OK", command=self.on_ok)
+        self.ok_button.grid(row=2, column=0)
+
+        self.cancel_button = Button(self, text="Cancel", command=self.on_cancel)
+        self.cancel_button.grid(row=2, column=1)
+
+        self.e1.bind("<Return>", self.on_ok)
+        self.e2.bind("<Return>", self.on_ok)
+        self.show()
+
+    def on_ok(self, event=None):
+        key = self.key_var.get()
+        value = self.value_var.get()
         self.result = (key, value)
+        self.destroy()
+
+    def on_cancel(self, event=None):
+        self.result = None
+        self.destroy()
+
+    def show(self):
+        self.wm_deiconify()
+        self.e1.focus_force()
+        self.wait_window()
 
 
 class OptionsFrame(Frame):

@@ -1,5 +1,5 @@
-from Tkinter import Frame, Button, Label, Entry, StringVar
-import tkFileDialog
+from tkinter import Frame, Button, Label, Entry, StringVar
+import tkinter.filedialog as tkFileDialog
 
 from constants import PADDING_X, PADDING_Y, STICKY
 
@@ -14,8 +14,9 @@ class SDCardFrame(Frame):
 
     def select_card(self):
         directory = tkFileDialog.askdirectory()
-        self.sd_card_root.set(directory)
-        self.master.load_files()
+        if directory:
+            self.sd_card_root.set(directory)
+            self.master.load_files()
 
     def create_widgets(self):
         self.sd_card_label = Label(

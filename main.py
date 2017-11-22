@@ -1,8 +1,8 @@
 import os
 import utils
 import constants
-import tkMessageBox
-from Tkinter import Tk, Frame, END, BOTH, YES
+import tkinter.messagebox as tkMessageBox
+from tkinter import Tk, Frame, END, BOTH, YES
 from sd_card_frame import SDCardFrame
 from file_mode_selection_frame import FileModeSelectionFrame
 from found_files_frame import FoundFilesFrame
@@ -313,5 +313,6 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# test linux, windows, osx, python 3
+# test linux, windows, osx, python 3 (http://python-future.org/compatible_idioms.html)
 # write readme
+# license

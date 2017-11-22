@@ -1,38 +1,56 @@
 import utils
 import os
 import time
-import tkMessageBox
-import tkSimpleDialog
-from shutil import copyfile
-from Tkinter import Frame, Button, Label, Listbox, END, Scrollbar, RIGHT, \
-    BOTTOM, X, Y, HORIZONTAL, VERTICAL, DISABLED, NORMAL, Entry
+import tkinter.messagebox as tkMessageBox
 import constants
 
+from shutil import copyfile
+from tkinter import Frame, Button, Label, Listbox, END, Scrollbar, RIGHT, \
+    BOTTOM, X, Y, HORIZONTAL, VERTICAL, DISABLED, NORMAL, Entry, Toplevel, \
+    StringVar
 
-class SuffixDialog(tkSimpleDialog.Dialog):
-    def __init__(self, parent, title=None, key=None, value=None):
-        self.parent = parent
-        tkSimpleDialog.Dialog.__init__(self, parent, title)
 
-    def body(self, master):
+class SuffixDialog(Toplevel):
+    def __init__(self, parent, key=None, value=None):
+        Toplevel.__init__(self, parent)
+
         prefix = constants.FILETYPES[
-            self.parent.master.get_mode()
+            parent.master.get_mode()
         ]['playlist_prefix']
 
         Label(
-            master,
+            self,
             text='Suffix (blank for no suffix): {}playlist-'.format(prefix)
         ).grid(row=0)
 
-        self.e1 = Entry(master)
+        self.prefix_var = StringVar()
+
+        self.e1 = Entry(self, textvariable=self.prefix_var)
         self.e1.grid(row=0, column=1)
 
-        Label(master, text='.txt').grid(row=0, column=2)
+        Label(self, text='.txt').grid(row=0, column=2)
 
-        return self.e1
+        self.ok_button = Button(self, text="OK", command=self.on_ok)
+        self.ok_button.grid(row=1, column=0)
 
-    def apply(self):
-        self.result = self.e1.get()
+        self.cancel_button = Button(self, text="Cancel", command=self.on_cancel)
+        self.cancel_button.grid(row=1, column=1)
+
+        self.e1.bind("<Return>", self.on_ok)
+        self.show()
+
+    def on_ok(self, event=None):
+        self.result = self.prefix_var.get()
+        self.destroy()
+
+    def on_cancel(self, event=None):
+        self.result = None
+        self.destroy()
+
+    def show(self):
+        self.wm_deiconify()
+        self.e1.focus_force()
+        self.wait_window()
 
 
 class PlaylistsFrame(Frame):

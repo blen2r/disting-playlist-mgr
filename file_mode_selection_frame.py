@@ -1,7 +1,7 @@
-from Tkinter import Frame, Label, StringVar
-from ttk import Combobox
+from tkinter import Frame, Label, StringVar
+from tkinter.ttk import Combobox
 
-import tkMessageBox
+import tkinter.messagebox as tkMessageBox
 import constants
 
 

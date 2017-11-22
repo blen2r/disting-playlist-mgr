@@ -1,31 +1,51 @@
-from Tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
+from tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
     Button, VERTICAL, RIGHT, Y, Scrollbar, HORIZONTAL, BOTTOM, X, Listbox, \
-    EXTENDED, BOTH, LEFT
+    EXTENDED, BOTH, LEFT, Toplevel
 from constants import PADDING_X, PADDING_Y, STICKY, SELECTION_COLOR, \
     DEFAULT_COLOR, BUTTON_MAX_TEXT_LENGTH, BUTTON_PADDING_X, \
     BUTTON_PADDING_Y, MISSING_COLOR, PROBLEMATIC_DIR_COLOR
 from natsort import natsorted
 
 import constants
-import tkSimpleDialog
-import tkFileDialog
-import tkMessageBox
+import tkinter.filedialog as tkFileDialog
+import tkinter.messagebox as tkMessageBox
 import utils
 import os
 
 
-class NormalizationHeadroomDialog(tkSimpleDialog.Dialog):
-    def body(self, master):
-        Label(master, text="Headroom:").grid(row=0)
+class NormalizationHeadroomDialog(Toplevel):
+    def __init__(self, parent, key=None, value=None):
+        Toplevel.__init__(self, parent)
 
-        self.e1 = Entry(master)
+        Label(self, text="Headroom:").grid(row=0)
+
+        self.headroom_var = StringVar()
+
+        self.e1 = Entry(self, textvariable=self.headroom_var)
         self.e1.insert(0, str(constants.DEFAULT_HEADROOM))
-
         self.e1.grid(row=0, column=1)
-        return self.e1
 
-    def apply(self):
-        self.result = self.e1.get()
+        self.ok_button = Button(self, text="OK", command=self.on_ok)
+        self.ok_button.grid(row=1, column=0)
+
+        self.cancel_button = Button(self, text="Cancel", command=self.on_cancel)
+        self.cancel_button.grid(row=1, column=1)
+
+        self.e1.bind("<Return>", self.on_ok)
+        self.show()
+
+    def on_ok(self, event=None):
+        self.result = self.headroom_var.get()
+        self.destroy()
+
+    def on_cancel(self, event=None):
+        self.result = None
+        self.destroy()
+
+    def show(self):
+        self.wm_deiconify()
+        self.e1.focus_force()
+        self.wait_window()
 
 
 class FoundFilesFrame(Frame):
