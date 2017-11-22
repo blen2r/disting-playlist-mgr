@@ -184,7 +184,7 @@ class PlaylistsFrame(Frame):
 
         self.load_button = Button(
             self.buttons_frame,
-            text='Load selected',
+            text='Load',
             command=self.load
         )
         self.load_button.grid(
@@ -197,7 +197,7 @@ class PlaylistsFrame(Frame):
 
         self.make_active_button = Button(
             self.buttons_frame,
-            text='Make selected active',
+            text='Activate',
             command=self.make_selected_active
         )
         self.make_active_button.grid(

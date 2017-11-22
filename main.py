@@ -244,7 +244,7 @@ If you save a playlist while some items are missing, these items won't be saved 
             column=0,
             padx=constants.PADDING_X,
             pady=constants.PADDING_Y,
-            columnspan=2,
+            columnspan=3,
             sticky=constants.STICKY
         )
 
@@ -254,7 +254,7 @@ If you save a playlist while some items are missing, these items won't be saved 
             column=0,
             padx=constants.PADDING_X,
             pady=constants.PADDING_Y,
-            columnspan=2,
+            columnspan=3,
             sticky=constants.STICKY
         )
 
@@ -264,7 +264,7 @@ If you save a playlist while some items are missing, these items won't be saved 
             column=0,
             padx=constants.PADDING_X,
             pady=constants.PADDING_Y,
-            rowspan=3,
+            rowspan=2,
             sticky=constants.STICKY
         )
 
@@ -279,8 +279,8 @@ If you save a playlist while some items are missing, these items won't be saved 
 
         self.file_options_frame = OptionsFrame(self, global_option=False)
         self.file_options_frame.grid(
-            row=3,
-            column=1,
+            row=2, # row=3,
+            column=2, # column=1,
             padx=constants.PADDING_X,
             pady=constants.PADDING_Y,
             sticky=constants.STICKY
@@ -288,7 +288,7 @@ If you save a playlist while some items are missing, these items won't be saved 
 
         self.playlists_frame = PlaylistsFrame(self)
         self.playlists_frame.grid(
-            row=4,
+            row=3,
             column=1,
             padx=constants.PADDING_X,
             pady=constants.PADDING_Y,
@@ -307,11 +307,11 @@ If you save a playlist while some items are missing, these items won't be saved 
 
 
 root = Tk()
+root.geometry('765x500')
 app = Application(master=root)
 app.mainloop()
 root.destroy()
 
 # TODO:
-# fix layout
 # test linux, windows, osx, python 3
 # write readme

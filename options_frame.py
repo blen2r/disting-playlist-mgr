@@ -128,7 +128,7 @@ class OptionsFrame(Frame):
         self.clear_button.config(state=DISABLED)
 
     def create_widgets(self):
-        label_text = 'Selected file(s) options\n(see README)'
+        label_text = 'Selected file(s) options'
 
         if self.global_option:
             label_text = 'Global options'

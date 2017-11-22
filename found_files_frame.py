@@ -552,23 +552,9 @@ Directory {} contains {} files of the selected type.'''.format(
             sticky=STICKY
         )
 
-        self.open_selected_button = Button(
-            self.buttons_frame,
-            text='Open',
-            wraplength=BUTTON_MAX_TEXT_LENGTH,
-            command=self.open_selected
-        )
-        self.open_selected_button.grid(
-            row=2,
-            column=2,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
-        )
-
         self.normalize_selected_button = Button(
             self.buttons_frame,
-            text='Normalize selected',
+            text='Normalize',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
             command=self.normalize_selected
         )
@@ -582,13 +568,40 @@ Directory {} contains {} files of the selected type.'''.format(
 
         self.make16bit_selected_button = Button(
             self.buttons_frame,
-            text='Make selected 16 bit',
+            text='Make 16 bit',
             wraplength=BUTTON_MAX_TEXT_LENGTH,
             command=self.make_16bit_selected
         )
         self.make16bit_selected_button.grid(
             row=3,
             column=1,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.make_mono_selected_button = Button(
+            self.buttons_frame,
+            text='Make mono',
+            command=self.make_mono_selected
+        )
+        self.make_mono_selected_button.grid(
+            row=3,
+            column=2,
+            padx=BUTTON_PADDING_X,
+            pady=BUTTON_PADDING_Y,
+            sticky=STICKY
+        )
+
+        self.open_selected_button = Button(
+            self.buttons_frame,
+            text='Open',
+            wraplength=BUTTON_MAX_TEXT_LENGTH,
+            command=self.open_selected
+        )
+        self.open_selected_button.grid(
+            row=4,
+            column=0,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
@@ -601,8 +614,8 @@ Directory {} contains {} files of the selected type.'''.format(
             command=self.selected_details
         )
         self.selected_details_button.grid(
-            row=3,
-            column=2,
+            row=4,
+            column=1,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
@@ -615,20 +628,7 @@ Directory {} contains {} files of the selected type.'''.format(
         )
         self.save_as_button.grid(
             row=4,
-            column=0,
-            padx=BUTTON_PADDING_X,
-            pady=BUTTON_PADDING_Y,
-            sticky=STICKY
-        )
-
-        self.make_mono_selected_button = Button(
-            self.buttons_frame,
-            text='Make mono',
-            command=self.make_mono_selected
-        )
-        self.make_mono_selected_button.grid(
-            row=4,
-            column=1,
+            column=2,
             padx=BUTTON_PADDING_X,
             pady=BUTTON_PADDING_Y,
             sticky=STICKY
