@@ -5,6 +5,7 @@ import constants
 from functools import wraps
 from shutil import copyfile
 from pydub import effects, AudioSegment
+from natsort import natsorted
 
 
 def _create_dir(sdcard_root):
@@ -55,8 +56,15 @@ def make_16bit(sdcard_root, filename, backup):
     if backup:
         copyfile(full_path, full_path + '_bak')
 
-    data, samplerate = soundfile.read(full_path)
-    soundfile.write(full_path, data, samplerate, subtype='PCM_16')
+    sound = AudioSegment.from_file(
+        full_path,
+        'wav'
+    )
+
+    if sound.sample_width * 8 != 16:
+        # pydub has trouble with bit depth sometimes so using soundfile instead
+        data, samplerate = soundfile.read(full_path)
+        soundfile.write(full_path, data, samplerate, subtype='PCM_16')
 
 
 def make_mono(sdcard_root, filename, backup):
@@ -70,8 +78,9 @@ def make_mono(sdcard_root, filename, backup):
         'wav'
     )
 
-    sound = sound.set_channels(1)
-    sound.export(full_path, format='wav')
+    if sound.channels > 1:
+        sound = sound.set_channels(1)
+        sound.export(full_path, format='wav')
 
 
 def get_file_details(sdcard_root, filename):
@@ -169,7 +178,32 @@ def dist_to_elements_format(lines, file_types):
     return elements
 
 
-def write_playlist(full_path, elements):
+def write_playlist(full_path, elements, sdcard_root):
+    for f_e in elements['files']:
+        filename = f_e['filename']
+        element_full_path = os.path.join(sdcard_root, filename)
+        if os.path.isdir(element_full_path):
+            lst = [
+                f for f in os.listdir(element_full_path) if (not f.startswith('_')) and
+                f.endswith(
+                    filter(
+                        lambda x: x != 'DIRECTORIES',
+                        constants.FILETYPES['WAVETABLE']['extensions']
+                    )
+                )
+            ]
+            lst = natsorted(lst, key=lambda s: s.lower())
+
+            with open(os.path.join(element_full_path, 'playlist.txt'), 'w') as pf:
+                pf.write('disting playlist v1\n')
+
+                for sub_e in lst:
+                    sub_path = os.path.join(filename, sub_e)
+                    make_mono(sdcard_root, sub_path, False)
+                    make_16bit(sdcard_root, sub_path, False)
+                    pf.write(sub_e)
+                    pf.write('\n')
+
     lines = elements_to_dist_format(elements)
 
     with open(full_path, 'w') as f:
@@ -182,7 +216,7 @@ def list_playlists(sdcard_root, playlist_type):
     lst = [f for f in os.listdir(
         os.path.join(sdcard_root, constants.PLAYLISTS_DIR, playlist_type)
     ) if f.endswith('.txt')]
-    lst = sorted(lst, key=lambda s: s.lower())
+    lst = natsorted(lst, key=lambda s: s.lower())
     return lst
 
 
@@ -199,7 +233,7 @@ def list_files(sdcard_root, file_types):
             f == 'playlists'
         ))
     ]
-    lst = sorted(lst, key=lambda s: s.lower())
+    lst = natsorted(lst, key=lambda s: s.lower())
     return lst
 
 

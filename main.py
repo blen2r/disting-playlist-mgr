@@ -312,29 +312,6 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# wavetables (see last line)
 # fix layout
 # test linux, windows, osx, python 3
 # write readme
-
-
-
-# TODO:
-# Loading wavetables
-# Wavetables can be loaded in one of two ways: as a single WAV file containing all the waveforms
-# concatenated, or as a folder of WAV files, one per waveform.
-# The wavetables are listed in the standard playlist format as above, but with the dedicated name
-# "playlist-wavetable.txt". Each entry is either a WAV file (as in the other playlist formats), in which
-# case the file is assumed to contain all the waveforms concatenated, or a folder name.
-# If a folder is specified in "playlist-wavetable.txt", the folder contains the individual WAV files that
-# represent one waveform each. The folder must also contain a playlist (named "playlist.txt"), listing
-# the waveform WAV files in order.
-# Waveform WAVs must be in 16 bit mono format. The sample rate is unimportant, since the file is
-# assumed to contain exactly one cycle and so can pitched arbitrarily.
-# When using a single concatenated WAV file, the disting needs to be know how many frames in the
-# file make up one waveform. This is specified in the playlist via the -wavelength setting (default
-# 600). There are no settings that apply to wavetable folders, nor to the individual files inside the
-# folders.
-
-
-# saving playlist makes them mono and 16 bit, build the playlist.txt for it

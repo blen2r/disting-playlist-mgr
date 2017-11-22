@@ -4,6 +4,7 @@ from Tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
 from constants import PADDING_X, PADDING_Y, STICKY, SELECTION_COLOR, \
     DEFAULT_COLOR, BUTTON_MAX_TEXT_LENGTH, BUTTON_PADDING_X, \
     BUTTON_PADDING_Y, MISSING_COLOR, PROBLEMATIC_DIR_COLOR
+from natsort import natsorted
 
 import constants
 import tkSimpleDialog
@@ -96,7 +97,7 @@ class FoundFilesFrame(Frame):
     def add_missing_file(self, filename):
         current_files = set(self.files_list.get(0, END))
         current_files.add(filename)
-        current_files = sorted(
+        current_files = natsorted(
             current_files,
             key=lambda s: self.clear_formatting(s).lower()
         )
@@ -404,7 +405,11 @@ Directory {} contains {} files of the selected type.'''.format(
                 return
 
         try:
-            utils.write_playlist(file, self.master.get_current_elements())
+            utils.write_playlist(
+                file,
+                self.master.get_current_elements(),
+                self.master.get_sd_card_root()
+            )
         except Exception, e:
             print e
             tkMessageBox.showwarning(
