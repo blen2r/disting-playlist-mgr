@@ -1,3 +1,4 @@
+from __future__ import print_function
 import utils
 import os
 import time
@@ -141,8 +142,8 @@ class PlaylistsFrame(Frame):
                 in_file,
                 os.path.join(self.master.get_sd_card_root(), filename)
             )
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             tkMessageBox.showwarning(
                 'Error',
                 'Error while processing file {} . See console.'.format(file)

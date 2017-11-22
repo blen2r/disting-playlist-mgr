@@ -1,3 +1,4 @@
+from __future__ import print_function
 from tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
     Button, VERTICAL, RIGHT, Y, Scrollbar, HORIZONTAL, BOTTOM, X, Listbox, \
     EXTENDED, BOTH, LEFT, Toplevel
@@ -297,8 +298,8 @@ Directory {} contains {} files of the selected type.'''.format(
                     backup,
                     headroom
                 )
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 tkMessageBox.showwarning(
                     'Error',
                     'Error while processing file {} . See console.'.format(item)
@@ -325,8 +326,8 @@ Directory {} contains {} files of the selected type.'''.format(
                     item,
                     backup
                 )
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 tkMessageBox.showwarning(
                     'Error',
                     'Error while processing file {} . See console.'.format(item)
@@ -353,8 +354,8 @@ Directory {} contains {} files of the selected type.'''.format(
                     item,
                     backup
                 )
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 tkMessageBox.showwarning(
                     'Error',
                     'Error while processing file {} . See console.'.format(item)
@@ -430,8 +431,8 @@ Directory {} contains {} files of the selected type.'''.format(
                 self.master.get_current_elements(),
                 self.master.get_sd_card_root()
             )
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             tkMessageBox.showwarning(
                 'Error',
                 'Error while processing file {} . See console.'.format(file)

@@ -279,8 +279,8 @@ If you save a playlist while some items are missing, these items won't be saved 
 
         self.file_options_frame = OptionsFrame(self, global_option=False)
         self.file_options_frame.grid(
-            row=2, # row=3,
-            column=2, # column=1,
+            row=2,
+            column=2,
             padx=constants.PADDING_X,
             pady=constants.PADDING_Y,
             sticky=constants.STICKY
@@ -313,6 +313,7 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# test linux, windows, osx, python 3 (http://python-future.org/compatible_idioms.html)
+# wavetables mode broken on python3
+# test linux, windows, osx
 # write readme
 # license

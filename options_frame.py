@@ -78,7 +78,7 @@ class OptionsFrame(Frame):
 
     def add_or_edit_option(self, key, value):
         found = False
-        for idx in xrange(self.options_list.size()):
+        for idx in range(self.options_list.size()):
             if self.options_list.get(idx).split('=')[0] == key:
                 found = True
                 self.options_list.delete(idx)
@@ -104,7 +104,7 @@ class OptionsFrame(Frame):
                 self.master.edit_option(self.global_option, *d.result)
 
     def remove_option(self, key):
-        for idx in xrange(self.options_list.size()):
+        for idx in range(self.options_list.size()):
             if self.options_list.get(idx).split('=')[0] == key:
                 self.options_list.delete(idx)
 
