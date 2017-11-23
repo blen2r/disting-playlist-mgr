@@ -5,7 +5,7 @@ This application makes it easier to manage playlists on SD cards for the [Expert
 
 ## Installation
 * Clone this repository or download its content using GitHub's "download ZIP file" option.
-* Install [Python (2.7 or 3)](https://www.python.org/)
+* Install [Python (2.7 or 3)](https://www.python.org/) (tested on Python 2.7 and 3 on Linux, 2.7 on Windows 10 and macOS Sierra)
 * Install Tkinter (some platforms already have it packaged with Python)
 * Install dependencies
   * [Virtualenv](https://virtualenv.pypa.io/) is recommended to isolate the dependencies to the local project
