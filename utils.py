@@ -186,10 +186,10 @@ def write_playlist(full_path, elements, sdcard_root):
             lst = [
                 f for f in os.listdir(element_full_path) if (not f.startswith('_')) and
                 f.endswith(
-                    filter(
+                    tuple(filter(
                         lambda x: x != 'DIRECTORIES',
                         constants.FILETYPES['WAVETABLE']['extensions']
-                    )
+                    ))
                 )
             ]
             lst = natsorted(lst, key=lambda s: s.lower())
@@ -224,7 +224,7 @@ def list_files(sdcard_root, file_types):
     directories = False
     if 'DIRECTORIES' in file_types:
         directories = True
-        file_types = filter(lambda x: x != 'DIRECTORIES', file_types)
+        file_types = tuple(filter(lambda x: x != 'DIRECTORIES', file_types))
 
     lst = [
         f for f in os.listdir(sdcard_root) if (not f.startswith('_')) and
@@ -238,11 +238,10 @@ def list_files(sdcard_root, file_types):
 
 
 def load_playlist(sdcard_root, playlist_type, filename):
-    playlist_type = playlist_type.lower()
     full_path = os.path.join(
         sdcard_root,
         constants.PLAYLISTS_DIR,
-        playlist_type,
+        constants.FILETYPES[playlist_type.upper()]['name'].lower(),
         filename
     )
 

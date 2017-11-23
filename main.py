@@ -197,7 +197,7 @@ If you save a playlist while some items are missing, these items won't be saved 
         self.playlists_frame.set_files(
             utils.list_playlists(
                 self.get_sd_card_root(),
-                constants.FILETYPES[self.get_mode()]['name']
+                constants.FILETYPES[self.get_mode()]['name'].lower()
             )
         )
 

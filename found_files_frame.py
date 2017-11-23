@@ -124,7 +124,7 @@ class FoundFilesFrame(Frame):
         )
         self.set_files(
             current_files,
-            constants.FILETYPES[self.master.get_mode()]['name']
+            constants.FILETYPES[self.master.get_mode()]['extensions']
         )
 
     def get_selected_files(self):
@@ -439,6 +439,10 @@ Directory {} contains {} files of the selected type.'''.format(
             )
         self.master.load_playlists()
         self.master.mark_clean()
+        tkMessageBox.showinfo(
+            'Done',
+            'Done!'
+        )
 
     def select_marked_files(self):
         self.files_list.selection_clear(0, END)
