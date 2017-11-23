@@ -162,11 +162,25 @@ def dist_to_elements_format(lines, file_types):
     for line in lines:
         cleaned_line = line.rstrip()
 
+        if cleaned_line == '':
+            continue
+
         if cleaned_line.endswith('disting playlist v1'):
             current_element['fetching_global_options'] = True
             continue
 
-        if cleaned_line.endswith(file_types):
+        # option
+        if '=' in cleaned_line:
+            if current_element.get('fetching_global_options'):
+                split_elems = cleaned_line.split('=')
+                current_element[split_elems[0][1:]] = split_elems[1]
+            else:
+                if 'options' not in current_element:
+                    current_element['options'] = {}
+                split_elems = cleaned_line.split('=')
+                current_element['options'][split_elems[0][1:]] = split_elems[1]
+        else:
+            # filename
             if len(current_element) > 0:
                 if current_element.get('fetching_global_options'):
                     del current_element['fetching_global_options']
@@ -176,15 +190,6 @@ def dist_to_elements_format(lines, file_types):
                 current_element = {}
 
             current_element['filename'] = cleaned_line
-        else:
-            if current_element.get('fetching_global_options'):
-                split_elems = cleaned_line.split('=')
-                current_element[split_elems[0][1:]] = split_elems[1]
-            else:
-                if 'options' not in current_element:
-                    current_element['options'] = {}
-                split_elems = cleaned_line.split('=')
-                current_element['options'][split_elems[0][1:]] = split_elems[1]
 
     if len(current_element) > 0:
         if current_element.get('fetching_global_options'):
@@ -223,6 +228,9 @@ def write_playlist(full_path, elements, sdcard_root):
                     pf.write('\n')
 
     lines = elements_to_dist_format(elements)
+
+    if not full_path.endswith('.txt'):
+        full_path = full_path + '.txt'
 
     with open(full_path, 'w') as f:
         f.writelines('\n'.join(lines))

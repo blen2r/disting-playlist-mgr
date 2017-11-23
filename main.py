@@ -322,10 +322,10 @@ If you save a playlist while some items are missing, these items won't be saved 
         )
 
         self.sd_card_frame.select_card()
+        self.master.geometry('{}x{}'.format(self.winfo_width(), self.winfo_height()))
 
 
 root = Tk()
-root.geometry('765x500')
 app = Application(master=root)
 app.mainloop()
 root.destroy()
