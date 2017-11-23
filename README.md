@@ -1,3 +1,5 @@
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/blen2r)
+
 # Disting Playlist Manager
 This application makes it easier to manage playlists on SD cards for the [Expert Sleepers](http://expert-sleepers.co.uk) Disting Eurorack Module.
 
