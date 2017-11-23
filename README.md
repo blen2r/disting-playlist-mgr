@@ -14,6 +14,7 @@ This application makes it easier to manage playlists on SD cards for the [Expert
 
 
 ## Usage
+* Copy your WAV and MIDI files to the root of the SD card. Wavetables can either be single WAV files on the root (each file containing a concatenation of waveforms) or you can create a directory per wavetable, containing one WAV file per b waveform. See the Disting manual for more details.
 * Launch the application with `python main.py` (make sure your virtualenv is activated, if applicable).
 * "Marked" files (identified in yellow) will be part of the playlist when you save it.
 * When loading a playlist, files that were saved in it but now missing will be highlighted in red. You can fix the issue by putting the files back on the SD card and reloading the playlist. Alternatively, you can "unmark" the missing file to clear the red highlighting. When saving a playlist, missing files will be ignored.
