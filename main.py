@@ -313,7 +313,6 @@ app.mainloop()
 root.destroy()
 
 # TODO:
-# wavetables mode broken on python3
 # test linux, windows, osx
 # write readme
 # license

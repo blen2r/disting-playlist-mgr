@@ -1,4 +1,3 @@
-from __future__ import print_function
 from tkinter import Frame, Label, StringVar, Entry, END, DISABLED, NORMAL, \
     Button, VERTICAL, RIGHT, Y, Scrollbar, HORIZONTAL, BOTTOM, X, Listbox, \
     EXTENDED, BOTH, LEFT, Toplevel
@@ -8,6 +7,7 @@ from constants import PADDING_X, PADDING_Y, STICKY, SELECTION_COLOR, \
 from natsort import natsorted
 
 import constants
+import traceback
 import tkinter.filedialog as tkFileDialog
 import tkinter.messagebox as tkMessageBox
 import utils
@@ -298,8 +298,8 @@ Directory {} contains {} files of the selected type.'''.format(
                     backup,
                     headroom
                 )
-            except Exception as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 tkMessageBox.showwarning(
                     'Error',
                     'Error while processing file {} . See console.'.format(item)
@@ -326,8 +326,8 @@ Directory {} contains {} files of the selected type.'''.format(
                     item,
                     backup
                 )
-            except Exception as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 tkMessageBox.showwarning(
                     'Error',
                     'Error while processing file {} . See console.'.format(item)
@@ -354,8 +354,8 @@ Directory {} contains {} files of the selected type.'''.format(
                     item,
                     backup
                 )
-            except Exception as e:
-                print(e)
+            except Exception:
+                traceback.print_exc()
                 tkMessageBox.showwarning(
                     'Error',
                     'Error while processing file {} . See console.'.format(item)
@@ -431,8 +431,8 @@ Directory {} contains {} files of the selected type.'''.format(
                 self.master.get_current_elements(),
                 self.master.get_sd_card_root()
             )
-        except Exception as e:
-            print(e)
+        except Exception:
+            traceback.print_exc()
             tkMessageBox.showwarning(
                 'Error',
                 'Error while processing file {} . See console.'.format(file)
@@ -451,6 +451,7 @@ Directory {} contains {} files of the selected type.'''.format(
 
             if filename in self.master.marked_items:
                 self.files_list.selection_set(idx)
+        self.selection_changed()
 
     def create_widgets(self):
         self.label = Label(

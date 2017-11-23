@@ -1,9 +1,10 @@
-from __future__ import print_function
+
 import utils
 import os
 import time
 import tkinter.messagebox as tkMessageBox
 import constants
+import traceback
 
 from shutil import copyfile
 from tkinter import Frame, Button, Label, Listbox, END, Scrollbar, RIGHT, \
@@ -78,14 +79,21 @@ class PlaylistsFrame(Frame):
             if not sure:
                 return
 
-        elements = utils.load_playlist(
-            self.master.get_sd_card_root(),
-            self.master.get_mode(),
-            self.playlists_list.get(self.playlists_list.curselection()[0])
-        )
+        try:
+            elements = utils.load_playlist(
+                self.master.get_sd_card_root(),
+                self.master.get_mode(),
+                self.playlists_list.get(self.playlists_list.curselection()[0])
+            )
 
-        self.master.load_playlist_from_elements(elements)
-        self.master.mark_clean()
+            self.master.load_playlist_from_elements(elements)
+            self.master.mark_clean()
+        except Exception:
+            traceback.print_exc()
+            tkMessageBox.showwarning(
+                'Error',
+                'Error while processing file. Is the playlist malformed/invalid?'
+            )
 
     def make_selected_active(self):
         if constants.FILETYPES[
@@ -142,8 +150,8 @@ class PlaylistsFrame(Frame):
                 in_file,
                 os.path.join(self.master.get_sd_card_root(), filename)
             )
-        except Exception as e:
-            print(e)
+        except Exception:
+            traceback.print_exc()
             tkMessageBox.showwarning(
                 'Error',
                 'Error while processing file {} . See console.'.format(file)
