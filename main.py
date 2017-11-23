@@ -329,8 +329,3 @@ root.geometry('765x500')
 app = Application(master=root)
 app.mainloop()
 root.destroy()
-
-# TODO:
-# test linux, windows, osx
-# write readme
-# license
