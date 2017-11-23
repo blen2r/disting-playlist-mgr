@@ -394,9 +394,10 @@ Directory {} contains {} files of the selected type.'''.format(
 
     def selected_details(self):
         idx = self.files_list.curselection()[0]
+        filename=self.clear_formatting(self.files_list.get(idx))
         details = utils.get_file_details(
             self.master.get_sd_card_root(),
-            self.files_list.get(idx)
+            filename
         )
 
         tkMessageBox.showinfo(
@@ -409,7 +410,7 @@ Directory {} contains {} files of the selected type.'''.format(
             Bit depth: {bit_depth} bit\n
             Peak amplitude: {amplitude}
             """.format(
-                filename=self.files_list.get(idx),
+                filename=filename,
                 duration=details['duration'],
                 channels=details['channels'],
                 sample_rate=details['sample_rate'],
